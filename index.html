@@ -1,242 +1,303 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hyperelastic Model Fitter (Eng. Strain/Stress)</title>
-    <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.tailwindcss.com%2F&data=05%7C02%7C%7C37dbb19f5e79404ffd4708de5d94ac48%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051090316483749%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=YJbdWmEOVu55guwFLf07ZuSRZ4dRE4Tqf8JAMaB9YFA%3D&reserved=0"></script>
-    <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fchart.js%404.4.1%2Fdist%2Fchart.umd.min.js&data=05%7C02%7C%7C37dbb19f5e79404ffd4708de5d94ac48%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051090316503513%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=tIkdTP5JUC2xLeYRW20r0QrRFNsu1FZuhtzogosZwkE%3D&reserved=0"></script>
-    <script>
-        window.MathJax = {
-            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-            svg: { fontCache: 'global' }
-        };
-    </script>
-    <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fmathjax%403%2Fes5%2Ftex-mml-chtml.js&data=05%7C02%7C%7C37dbb19f5e79404ffd4708de5d94ac48%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051090316514225%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=HZOpea6p6JD36DnYXHz8%2B9qDzmJcDGyLSLoedUvssJM%3D&reserved=0"></script>
-    <style>
-        @import url('https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Ffonts.googleapis.com%2Fcss2%3Ffamily%3DInter%3Awght%40400%3B600%3B700%26display%3Dswap&data=05%7C02%7C%7C37dbb19f5e79404ffd4708de5d94ac48%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051090316528612%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=Qf6EM4Kyx%2FuImkf41GkV4VgO2cERghklFmCmItgfLas%3D&reserved=0');
-        body { font-family: 'Inter', sans-serif; }
-        .data-input-area {
-            min-height: 300px;
-            font-family: 'ui-monospace', monospace;
-            line-height: 1.4;
-        }
-        .chart-container { position: relative; height: 400px; width: 100%; }
-        .tab-active { background-color: #1e3a8a; color: white; }
-    </style>
+   <meta charset="UTF-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <title>Advanced Hyperelastic Fitter (Eng. Units)</title>
+   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.tailwindcss.com%2F&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833506162%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=J7oUuMu5onynse2nz1zSXlhJbNamCLLjGmApKtehqNg%3D&reserved=0"></script>
+   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fchart.js%404.4.1%2Fdist%2Fchart.umd.min.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833535274%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=dmqHs%2BGo9z4iCw76sTDC1xzyW%2BX%2BHOTVc%2FSZn9JAadU%3D&reserved=0"></script>
+   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdnjs.cloudflare.com%2Fajax%2Flibs%2Fmathjs%2F11.8.0%2Fmath.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833553966%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=pu90G9bClw7i4cZYvmiwacSCSVryD6cf9j64XJZRfGk%3D&reserved=0"></script>
+   <script>
+       window.MathJax = { tex: { inlineMath: [['$', '$']] } };
+   </script>
+   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fmathjax%403%2Fes5%2Ftex-mml-chtml.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833568739%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=PakOPnxt5NIa2Yf6%2Frd8kvElz1SZIzHtUz6cDH23BAQ%3D&reserved=0"></script>
+   <style>
+       @import url('https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Ffonts.googleapis.com%2Fcss2%3Ffamily%3DInter%3Awght%40400%3B600%3B700%26display%3Dswap&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833583404%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=PI7LdNtPIag1lCR1SNupfL2cx9JY9LeXyAl7tKuF95o%3D&reserved=0');
+       body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+       .data-input-area { min-height: 300px; font-family: 'ui-monospace', monospace; font-size: 13px; }
+       .chart-container { position: relative; height: 450px; width: 100%; }
+       .tab-active { background-color: #1e3a8a; color: white; border-color: #1e3a8a; }
+       .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+       @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+   </style>
 </head>
-<body class="bg-gray-50 text-gray-900">
+<body class="bg-slate-50 text-slate-900">
 
-    <header class="bg-blue-900 text-white py-6 shadow-md">
-        <div class="max-w-7xl mx-auto px-6">
-            <h1 class="text-3xl font-extrabold">Hyperelastic Model Fitter</h1>
-            <p class="text-blue-200 text-sm mt-1">Input Format: Engineering Strain ($\epsilon$) and Engineering Stress ($s$)</p>
-        </div>
-    </header>
+   <header class="bg-slate-900 text-white py-6 shadow-xl">
+       <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+           <div>
+               <h1 class="text-3xl font-extrabold tracking-tight">Hyperelastic Fitter <span class="text-blue-400">Pro</span></h1>
+               <p class="text-slate-400 text-sm">Non-linear Parameter Optimization • Eng. Strain ($\epsilon$) & Stress ($s$)</p>
+           </div>
+           <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
+               <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
+               <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
+           </div>
+       </div>
+   </header>
 
-    <main class="max-w-7xl mx-auto px-6 py-8">
-        <!-- Navigation -->
-        <nav class="flex space-x-2 bg-white p-1 rounded-xl shadow-sm mb-8 border border-gray-100">
-            <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-lg transition-all tab-active">1. Data Input</button>
-            <button onclick="switchTab('cleaning')" id="tab-cleaning" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-lg transition-all text-gray-500 hover:bg-gray-50">2. Preprocessing</button>
-            <button onclick="switchTab('results')" id="tab-results" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-lg transition-all text-gray-500 hover:bg-gray-50">3. Parameters & Fit</button>
-        </nav>
+   <main class="max-w-7xl mx-auto px-6 py-8">
+       <!-- Tab Nav -->
+       <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
+           <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">1. Experimental Data</button>
+           <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">2. Optimization & Results</button>
+       </nav>
 
-        <!-- Input Section -->
-        <section id="section-input" class="tab-content">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <div class="flex justify-between items-center mb-4">
-                            <h2 class="text-xl font-bold">Experimental Test Data</h2>
-                            <span class="text-xs font-mono text-blue-600">Eng. Strain [mm/mm] | Eng. Stress [MPa]</span>
-                        </div>
-                        <textarea id="uniaxialInput" class="w-full data-input-area p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm" placeholder="0.000 0.00
-0.050 0.18
-0.100 0.35
-0.250 1.10
-..."></textarea>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h3 class="text-sm font-bold text-gray-400 uppercase mb-4">Quick Actions</h3>
-                        <button onclick="loadSample()" class="w-full py-2 bg-gray-100 hover:bg-gray-200 rounded-lg text-sm font-medium transition-colors mb-3">Load Sample Data</button>
-                        <p class="text-xs text-gray-500 italic">Load example uniaxial tension data from a typical soft polymer test.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
+       <section id="section-input" class="tab-content">
+           <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+               <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                   <div class="flex justify-between items-center mb-4">
+                       <h2 class="text-lg font-bold">Uniaxial Test Data</h2>
+                       <div class="flex gap-2">
+                           <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Rubber</button>
+                           <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Soft Tissue</button>
+                       </div>
+                   </div>
+                   <textarea id="uniaxialInput" class="w-full data-input-area p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="# Eng. Strain | Eng. Stress"></textarea>
+               </div>
+               <div class="space-y-6">
+                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Preprocessing</h3>
+                       <div class="space-y-4">
+                           <div class="flex items-center gap-3">
+                               <input type="checkbox" id="doZero" checked class="w-5 h-5 text-blue-600 rounded">
+                               <label class="text-sm font-semibold">Zero-Offset</label>
+                           </div>
+                           <div>
+                               <label class="block text-xs font-bold text-slate-500 mb-1">Grouping ($\Delta\epsilon$)</label>
+                               <input type="number" id="groupThresh" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
+                           </div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+       </section>
 
-        <!-- Cleaning Section -->
-        <section id="section-cleaning" class="tab-content hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="space-y-6">
-                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                        <h2 class="text-xl font-bold mb-4">Data Processing</h2>
-                        <div class="space-y-4">
-                            <div class="flex items-center gap-3">
-                                <input type="checkbox" id="doZero" checked class="w-5 h-5 text-blue-600 rounded">
-                                <label class="text-sm font-medium">Auto-zero stress offset</label>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
-                                <input type="number" id="groupThresh" value="0.005" step="0.001" class="w-full p-2 border border-gray-200 rounded-lg text-sm">
-                            </div>
-                            <button onclick="processAndRender()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">Update Cleaning</button>
-                        </div>
-                    </div>
-                    <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
-                </div>
-                <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-center text-sm font-bold text-gray-400 mb-4">Raw vs Cleaned Data</h3>
-                    <div class="chart-container">
-                        <canvas id="preChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
+       <section id="section-fit" class="tab-content hidden">
+           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+               <div class="lg:col-span-1 space-y-6">
+                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                       <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
+                       <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
+                       <select id="modelSelect" onchange="runOptimization()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-6">
+                           <option value="mooney2">Mooney-Rivlin (2-Term)</option>
+                           <option value="mooney3">Mooney-Rivlin (3-Term)</option>
+                           <option value="neo">Neo-Hookean</option>
+                           <option value="ogden2">Ogden (N=2)</option>
+                           <option value="ogden3">Ogden (N=3)</option>
+                           <option value="arruda">Arruda-Boyce</option>
+                       </select>
 
-        <!-- Results Section -->
-        <section id="section-results" class="tab-content hidden">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <h2 class="text-2xl font-bold mb-6">Model Fitting</h2>
-                    <div class="mb-6">
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Select Hyperelastic Model</label>
-                        <select id="modelSelect" onchange="runFit()" class="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl font-semibold">
-                            <option value="mooney">Mooney-Rivlin (2-Term)</option>
-                            <option value="neo">Neo-Hookean</option>
-                        </select>
-                    </div>
-                    <div id="paramsDisplay" class="grid grid-cols-2 gap-4 mb-8"></div>
-                    <div id="codeDisplay" class="bg-gray-900 p-4 rounded-xl font-mono text-green-400 text-xs overflow-x-auto"></div>
-                </div>
-                <div class="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                    <h3 class="text-center text-sm font-bold text-gray-400 mb-4">Validation Curve</h3>
-                    <div class="chart-container">
-                        <canvas id="valChart"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
+                       <button onclick="runOptimization()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">RECALIBRATE FIT</button>
+                   </div>
 
-    <script>
-        let rawData = [], cleanData = [], charts = {};
+                   <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+                       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
+                       <div id="paramsContainer" class="space-y-3 font-mono text-sm"></div>
+                       <div class="mt-6 pt-6 border-t border-slate-100">
+                           <div class="flex justify-between items-center mb-2">
+                               <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$)</span>
+                               <span id="r2Val" class="text-sm font-bold text-emerald-600">0.0000</span>
+                           </div>
+                       </div>
+                   </div>
+               </div>
 
-        function switchTab(id) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-            document.getElementById(`section-${id}`).classList.remove('hidden');
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-gray-500'));
-            document.getElementById(`tab-${id}`).classList.add('tab-active');
-           
-            if (id === 'cleaning') processAndRender();
-            if (id === 'results') runFit();
-        }
+               <div class="lg:col-span-2 space-y-6">
+                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                       <div class="chart-container">
+                           <canvas id="valChart"></canvas>
+                       </div>
+                   </div>
+                   <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner font-mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
+                       <span class="text-slate-500 block mb-2"># FEA Solver Material Data (Abaqus Format)</span>
+                   </div>
+               </div>
+           </div>
+       </section>
+   </main>
 
-        function loadSample() {
-            document.getElementById('uniaxialInput').value = "0.000 0.00\n0.052 0.22\n0.105 0.45\n0.250 1.15\n0.500 2.30\n1.000 4.50\n1.500 6.80\n2.000 8.50";
-            switchTab('input');
-        }
+   <script>
+       let cleanData = [], chart = null;
 
-        function processAndRender() {
-            const input = document.getElementById('uniaxialInput').value;
-            const lines = input.split('\n').map(l => l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p => p.length >= 2);
-           
-            rawData = lines.map(p => ({ x: parseFloat(p[0]), y: parseFloat(p[1]) })).filter(p => !isNaN(p.x));
-            rawData.sort((a,b) => a.x - b.x);
+       const MODELS = {
+           neo: { 
+               params: ['C10'], 
+               initial: [0.5],
+               solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2))
+           },
+           mooney2: { 
+               params: ['C10', 'C01'], 
+               initial: [0.4, 0.1],
+               solve: (L, [C10, C01]) => 2 * (L - Math.pow(L, -2)) * (C10 + C01/L)
+           },
+           mooney3: { 
+               params: ['C10', 'C01', 'C11'], 
+               initial: [0.4, 0.1, 0.01],
+               solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3))
+           },
+           ogden2: {
+               params: ['mu1', 'alpha1', 'mu2', 'alpha2'],
+               initial: [1.0, 2.0, -0.1, -2.0],
+               solve: (L, [m1, a1, m2, a2]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1)))
+           },
+           ogden3: {
+               params: ['mu1', 'alpha1', 'mu2', 'alpha2', 'mu3', 'alpha3'],
+               initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0],
+               solve: (L, [m1, a1, m2, a2, m3, a3]) => 
+                   (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + 
+                   (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) + 
+                   (m3*(Math.pow(L, a3-1) - Math.pow(L, -0.5*a3-1)))
+           },
+           arruda: {
+               params: ['mu', 'lambda_m'],
+               initial: [0.5, 5.0],
+               solve: (L, [mu, lm]) => {
+                   const I1 = L*L + 2/L;
+                   const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375);
+                   return mu * (L - 1/(L*L)) * poly;
+               }
+           }
+       };
 
-            let pts = [...rawData];
-            if (document.getElementById('doZero').checked && pts.length > 0) {
-                const ox = pts[0].x, oy = pts[0].y;
-                pts = pts.map(p => ({ x: p.x - ox, y: p.y - oy }));
-            }
+       function switchTab(id) {
+           document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+           document.getElementById(`section-${id}`).classList.remove('hidden');
+           document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-slate-500'));
+           document.getElementById(`tab-${id}`).classList.add('tab-active');
+           if (id === 'fit') runOptimization();
+       }
 
-            const thresh = parseFloat(document.getElementById('groupThresh').value);
-            if (thresh > 0 && pts.length > 0) {
-                let grouped = [], current = [pts[0]];
-                for (let i = 1; i < pts.length; i++) {
-                    if (pts[i].x - current[0].x <= thresh) current.push(pts[i]);
-                    else {
-                        grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
-                        current = [pts[i]];
-                    }
-                }
-                grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
-                pts = grouped;
-            }
-            cleanData = pts;
+       function loadSample(type) {
+           const data = type === 'rubber' ? 
+               "0.00 0.00\n0.10 0.35\n0.30 0.95\n0.60 1.80\n1.00 3.20\n1.50 5.10\n2.20 8.50\n3.00 15.00" :
+               "0.00 0.00\n0.02 0.01\n0.05 0.04\n0.10 0.15\n0.15 0.40\n0.20 0.90\n0.25 1.80\n0.30 3.50";
+           document.getElementById('uniaxialInput').value = data;
+           switchTab('input');
+       }
 
-            document.getElementById('summaryStats').innerHTML = `Points: ${rawData.length} raw → ${cleanData.length} cleaned. Max Strain: ${cleanData.length ? cleanData[cleanData.length-1].x.toFixed(3) : 0}`;
-            render('preChart', [
-                { label: 'Raw', data: rawData, color: '#CBD5E1' },
-                { label: 'Cleaned', data: cleanData, color: '#3B82F6', pointRadius: 5 }
-            ]);
-        }
+       function preprocess() {
+           const input = document.getElementById('uniaxialInput').value;
+           let pts = input.split('\n').map(l => l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p => p.length >= 2)
+                          .map(p => ({ x: parseFloat(p[0]), y: parseFloat(p[1]) })).filter(p => !isNaN(p.x));
+           pts.sort((a,b) => a.x - b.x);
 
-        function runFit() {
-            if (cleanData.length < 2) return;
-            const model = document.getElementById('modelSelect').value;
-           
-            // Internal Conversion: Eng Strain to Stretch (lambda = 1 + epsilon)
-            const fitData = cleanData.filter(p => p.x > 0).map(p => {
-                const L = 1 + p.x;
-                const stressTerm = 2 * (L - Math.pow(L, -2));
-                return { X: 1/L, Y: p.y / stressTerm };
-            });
+           if (document.getElementById('doZero').checked && pts.length > 0) {
+               const ox = pts[0].x, oy = pts[0].y;
+               pts = pts.map(p => ({ x: p.x - ox, y: p.y - oy }));
+           }
 
-            // Linear Least Squares for Mooney-Rivlin: Y = C1 + C2*X
-            const n = fitData.length;
-            const sx = fitData.reduce((a,b)=>a+b.X, 0), sy = fitData.reduce((a,b)=>a+b.Y, 0);
-            const sxx = fitData.reduce((a,b)=>a+b.X*b.X, 0), sxy = fitData.reduce((a,b)=>a+b.X*b.Y, 0);
-            const C2 = (n * sxy - sx * sy) / (n * sxx - sx * sx);
-            const C1 = (sy - C2 * sx) / n;
+           const thresh = parseFloat(document.getElementById('groupThresh').value);
+           if (thresh > 0 && pts.length > 0) {
+               let grouped = [], current = [pts[0]];
+               for (let i = 1; i < pts.length; i++) {
+                   if (pts[i].x - current[0].x <= thresh) current.push(pts[i]);
+                   else {
+                       grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
+                       current = [pts[i]];
+                   }
+               }
+               grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
+               pts = grouped;
+           }
+           cleanData = pts;
+       }
 
-            // Generate prediction curve
-            const maxE = cleanData[cleanData.length-1].x;
-            const curve = [];
-            for (let e=0; e <= maxE; e += maxE/50) {
-                const L = 1 + e;
-                const predS = 2 * (L - Math.pow(L, -2)) * (C1 + C2/L);
-                curve.push({ x: e, y: predS });
-            }
+       async function runOptimization() {
+           preprocess();
+           if (cleanData.length < 3) return;
 
-            document.getElementById('paramsDisplay').innerHTML = `
-                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <span class="text-[10px] font-bold text-blue-400 uppercase">Constant C10</span>
-                    <p class="text-xl font-mono font-bold">${C1.toFixed(5)}</p>
-                </div>
-                <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-                    <span class="text-[10px] font-bold text-blue-400 uppercase">Constant C01</span>
-                    <p class="text-xl font-mono font-bold">${C2.toFixed(5)}</p>
-                </div>`;
+           document.getElementById('statusIndicator').classList.remove('hidden');
+           const modelKey = document.getElementById('modelSelect').value;
+           const model = MODELS[modelKey];
 
-            document.getElementById('codeDisplay').innerHTML = `*MATERIAL, NAME=RUBBER\n*HYPERELASTIC, MOONEY-RIVLIN\n${C1.toFixed(6)}, ${C2.toFixed(6)}, 0.0000`;
+           // Simple Hill-Climbing / Nelder-Mead style optimization for browser stability
+           let bestParams = [...model.initial];
+           let bestError = calculateError(bestParams, model);
+           let step = 0.1;
 
-            render('valChart', [
-                { label: 'Experiment', data: cleanData, color: '#F59E0B', pointRadius: 5 },
-                { label: 'Model Fit', data: curve, color: '#1E3A8A', showLine: true, pointRadius: 0 }
-            ]);
-        }
+           for (let iter = 0; iter < 1000; iter++) {
+               let improved = false;
+               for (let i = 0; i < bestParams.length; i++) {
+                   for (let dir of [-1, 1]) {
+                       let nextParams = [...bestParams];
+                       nextParams[i] += step * dir;
+                       let nextError = calculateError(nextParams, model);
+                       if (nextError < bestError) {
+                           bestError = nextError;
+                           bestParams = nextParams;
+                           improved = true;
+                       }
+                   }
+               }
+               if (!improved) step *= 0.5;
+               if (step < 1e-7) break;
+           }
 
-        function render(id, datasets) {
-            const ctx = document.getElementById(id).getContext('2d');
-            if (charts[id]) charts[id].destroy();
-            charts[id] = new Chart(ctx, {
-                type: 'scatter',
-                data: { datasets: datasets.map(d => ({ ...d, borderColor: d.color, backgroundColor: d.color, showLine: d.showLine || false, borderWidth: 2 })) },
-                options: {
-                    responsive: true, maintainAspectRatio: false,
-                    scales: {
-                        x: { title: { display: true, text: 'Engineering Strain (ε)' } },
-                        y: { title: { display: true, text: 'Engineering Stress (s)' } }
-                    }
-                }
-            });
-        }
+           renderResults(modelKey, bestParams, bestError);
+           document.getElementById('statusIndicator').classList.add('hidden');
+       }
 
-        window.onload = () => { loadSample(); processAndRender(); };
-    </script>
+       function calculateError(params, model) {
+           return cleanData.reduce((sum, p) => {
+               const pred = model.solve(1 + p.x, params);
+               return sum + Math.pow(pred - p.y, 2);
+           }, 0);
+       }
+
+       function renderResults(key, params, err) {
+           const model = MODELS[key];
+           const container = document.getElementById('paramsContainer');
+           const card = document.getElementById('resultsCard');
+           const snippet = document.getElementById('abaqusSnippet');
+           card.classList.remove('hidden');
+
+           container.innerHTML = params.map((p, i) => `
+               <div class="flex justify-between border-b border-slate-50 pb-1">
+                   <span class="text-slate-400">${model.params[i]}</span>
+                   <span class="font-bold text-blue-700">${p.toFixed(6)}</span>
+               </div>
+           `).join('');
+
+           // R2 calculation
+           const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
+           const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY, 2), 0);
+           const r2 = 1 - (err / ssTot);
+           document.getElementById('r2Val').innerText = r2.toFixed(5);
+
+           // Chart
+           const maxE = cleanData[cleanData.length-1].x;
+           const curve = [];
+           for (let e=0; e<=maxE*1.1; e += maxE/50) {
+               curve.push({ x: e, y: model.solve(1+e, params) });
+           }
+
+           const ctx = document.getElementById('valChart').getContext('2d');
+           if (chart) chart.destroy();
+           chart = new Chart(ctx, {
+               type: 'scatter',
+               data: {
+                   datasets: [
+                       { label: 'Experiment', data: cleanData, backgroundColor: '#f59e0b', pointRadius: 5 },
+                       { label: 'Model Fit', data: curve, borderColor: '#1e3a8a', showLine: true, pointRadius: 0, borderWidth: 3 }
+                   ]
+               },
+               options: {
+                   responsive: true, maintainAspectRatio: false,
+                   scales: {
+                       x: { title: { display: true, text: 'Engineering Strain (ε)' }, grid: { display: false } },
+                       y: { title: { display: true, text: 'Engineering Stress (s)' } }
+                   }
+               }
+           });
+
+           // Abaqus snippet
+           let cmd = `*MATERIAL, NAME=USER_MATERIAL\n*HYPERELASTIC, ${key.toUpperCase().replace(/[0-9]/g, '')}`;
+           if (key.includes('ogden')) cmd += `, N=${key.slice(-1)}`;
+           snippet.innerHTML = `<pre>${cmd}\n${params.map(p => p.toFixed(6)).join(', ')}, 0.000</pre>`;
+       }
+
+       window.onload = () => loadSample('rubber');
+   </script>
 </body>
 </html>
