@@ -1,303 +1,368 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-   <meta charset="UTF-8">
-   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Advanced Hyperelastic Fitter (Eng. Units)</title>
-   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.tailwindcss.com%2F&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833506162%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=J7oUuMu5onynse2nz1zSXlhJbNamCLLjGmApKtehqNg%3D&reserved=0"></script>
-   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fchart.js%404.4.1%2Fdist%2Fchart.umd.min.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833535274%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=dmqHs%2BGo9z4iCw76sTDC1xzyW%2BX%2BHOTVc%2FSZn9JAadU%3D&reserved=0"></script>
-   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdnjs.cloudflare.com%2Fajax%2Flibs%2Fmathjs%2F11.8.0%2Fmath.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833553966%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=pu90G9bClw7i4cZYvmiwacSCSVryD6cf9j64XJZRfGk%3D&reserved=0"></script>
-   <script>
-       window.MathJax = { tex: { inlineMath: [['$', '$']] } };
-   </script>
-   <script src="https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Fcdn.jsdelivr.net%2Fnpm%2Fmathjax%403%2Fes5%2Ftex-mml-chtml.js&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833568739%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=PakOPnxt5NIa2Yf6%2Frd8kvElz1SZIzHtUz6cDH23BAQ%3D&reserved=0"></script>
-   <style>
-       @import url('https://gbr01.safelinks.protection.outlook.com/?url=https%3A%2F%2Ffonts.googleapis.com%2Fcss2%3Ffamily%3DInter%3Awght%40400%3B600%3B700%26display%3Dswap&data=05%7C02%7C%7C321de6b50d2c428f4a9f08de5de6fd84%7C84df9e7fe9f640afb435aaaaaaaaaaaa%7C1%7C0%7C639051443833583404%7CUnknown%7CTWFpbGZsb3d8eyJFbXB0eU1hcGkiOnRydWUsIlYiOiIwLjAuMDAwMCIsIlAiOiJXaW4zMiIsIkFOIjoiTWFpbCIsIldUIjoyfQ%3D%3D%7C0%7C%7C%7C&sdata=PI7LdNtPIag1lCR1SNupfL2cx9JY9LeXyAl7tKuF95o%3D&reserved=0');
-       body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
-       .data-input-area { min-height: 300px; font-family: 'ui-monospace', monospace; font-size: 13px; }
-       .chart-container { position: relative; height: 450px; width: 100%; }
-       .tab-active { background-color: #1e3a8a; color: white; border-color: #1e3a8a; }
-       .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
-       @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-   </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Advanced Hyperelastic Fitter (Eng. Units)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+  <!-- SheetJS for Excel/CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script>
+    window.MathJax = { tex: { inlineMath: [["$", "$"]] } };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
+    .chart-container { position: relative; height: 450px; width: 100%; }
+    .tab-active { background-color: #1e3a8a; color: white; border-color: #1e3a8a; }
+    .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
+    @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    table.data-table input { width: 100%; padding: 0.375rem; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
+  <header class="bg-slate-900 text-white py-6 shadow-xl">
+    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-extrabold tracking-tight">Hyperelastic Fitter <span class="text-blue-400">Pro</span></h1>
+        <p class="text-slate-400 text-sm">Non-linear Parameter Optimization • Eng. Strain ($\epsilon$) & Stress ($s$)</p>
+      </div>
+      <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
+        <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
+        <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
+      </div>
+    </div>
+  </header>
 
-   <header class="bg-slate-900 text-white py-6 shadow-xl">
-       <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-           <div>
-               <h1 class="text-3xl font-extrabold tracking-tight">Hyperelastic Fitter <span class="text-blue-400">Pro</span></h1>
-               <p class="text-slate-400 text-sm">Non-linear Parameter Optimization • Eng. Strain ($\epsilon$) & Stress ($s$)</p>
-           </div>
-           <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
-               <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
-               <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
-           </div>
-       </div>
-   </header>
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <!-- Tabs -->
+    <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
+      <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">1. Experimental Data</button>
+      <button onclick="switchTab('cleaning')" id="tab-cleaning" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">2. Preprocessing</button>
+      <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">3. Optimization & Results</button>
+    </nav>
 
-   <main class="max-w-7xl mx-auto px-6 py-8">
-       <!-- Tab Nav -->
-       <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
-           <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">1. Experimental Data</button>
-           <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">2. Optimization & Results</button>
-       </nav>
+    <!-- INPUT TAB -->
+    <section id="section-input" class="tab-content">
+      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <!-- Left: Data table -->
+        <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
+            <div>
+              <h2 class="text-lg font-bold">Uniaxial Test Data</h2>
+              <p class="text-xs text-slate-500">Enter manually in the table or <a href="#" class="text-blue-700 underline" onclick="document.getElementById('fileInput').click(); return false;">upload Excel/CSV</a>.</p>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Rubber</button>
+              <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Soft Tissue</button>
+            </div>
+          </div>
 
-       <section id="section-input" class="tab-content">
-           <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-               <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                   <div class="flex justify-between items-center mb-4">
-                       <h2 class="text-lg font-bold">Uniaxial Test Data</h2>
-                       <div class="flex gap-2">
-                           <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Rubber</button>
-                           <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Soft Tissue</button>
-                       </div>
-                   </div>
-                   <textarea id="uniaxialInput" class="w-full data-input-area p-4 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none" placeholder="# Eng. Strain | Eng. Stress"></textarea>
-               </div>
-               <div class="space-y-6">
-                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Preprocessing</h3>
-                       <div class="space-y-4">
-                           <div class="flex items-center gap-3">
-                               <input type="checkbox" id="doZero" checked class="w-5 h-5 text-blue-600 rounded">
-                               <label class="text-sm font-semibold">Zero-Offset</label>
-                           </div>
-                           <div>
-                               <label class="block text-xs font-bold text-slate-500 mb-1">Grouping ($\Delta\epsilon$)</label>
-                               <input type="number" id="groupThresh" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
-                           </div>
-                       </div>
-                   </div>
-               </div>
-           </div>
-       </section>
+          <!-- Upload input (hidden) -->
+          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)" />
 
-       <section id="section-fit" class="tab-content hidden">
-           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-               <div class="lg:col-span-1 space-y-6">
-                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                       <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
-                       <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
-                       <select id="modelSelect" onchange="runOptimization()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-6">
-                           <option value="mooney2">Mooney-Rivlin (2-Term)</option>
-                           <option value="mooney3">Mooney-Rivlin (3-Term)</option>
-                           <option value="neo">Neo-Hookean</option>
-                           <option value="ogden2">Ogden (N=2)</option>
-                           <option value="ogden3">Ogden (N=3)</option>
-                           <option value="arruda">Arruda-Boyce</option>
-                       </select>
+          <!-- Editable table -->
+          <div class="overflow-auto">
+            <table class="data-table w-full border border-slate-200 rounded-xl">
+              <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Strain</th>
+                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Stress</th>
+                  <th class="w-10 border-b"></th>
+                </tr>
+              </thead>
+              <tbody id="dataBody"></tbody>
+            </table>
+          </div>
 
-                       <button onclick="runOptimization()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">RECALIBRATE FIT</button>
-                   </div>
+          <!-- Table controls -->
+          <div class="mt-4 flex flex-wrap gap-2">
+            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="addRow()">Add Row</button>
+            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="tableToTextarea(); alert('Data captured. You can now go to Preprocessing/Optimization.');">Apply Table Data</button>
+          </div>
 
-                   <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
-                       <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
-                       <div id="paramsContainer" class="space-y-3 font-mono text-sm"></div>
-                       <div class="mt-6 pt-6 border-t border-slate-100">
-                           <div class="flex justify-between items-center mb-2">
-                               <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$)</span>
-                               <span id="r2Val" class="text-sm font-bold text-emerald-600">0.0000</span>
-                           </div>
-                       </div>
-                   </div>
-               </div>
+          <!-- Hidden textarea kept for backward-compat APIs; sync from table/upload -->
+          <textarea id="uniaxialInput" class="hidden"></textarea>
+        </div>
 
-               <div class="lg:col-span-2 space-y-6">
-                   <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                       <div class="chart-container">
-                           <canvas id="valChart"></canvas>
-                       </div>
-                   </div>
-                   <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner font-mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
-                       <span class="text-slate-500 block mb-2"># FEA Solver Material Data (Abaqus Format)</span>
-                   </div>
-               </div>
-           </div>
-       </section>
-   </main>
+        <!-- Right column: (Removed previous preprocessing card as requested) -->
+        <div class="space-y-6"></div>
+      </div>
+    </section>
 
-   <script>
-       let cleanData = [], chart = null;
+    <!-- CLEANING TAB (unchanged from merged version) -->
+    <section id="section-cleaning" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="space-y-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold mb-4 text-blue-900">Data Processing</h2>
+            <div class="space-y-4">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="doZero2" checked class="w-5 h-5 text-blue-600 rounded">
+                <label class="text-sm font-medium">Auto-zero stress offset</label>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-slate-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
+                <input type="number" id="groupThresh2" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+              </div>
+              <button onclick="processAndRender()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">Update Cleaning</button>
+            </div>
+          </div>
+          <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
+        </div>
+        <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h3 class="text-center text-sm font-bold text-slate-400 mb-4">Raw vs Cleaned Data</h3>
+          <div class="chart-container" style="height:400px">
+            <canvas id="preChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
 
-       const MODELS = {
-           neo: { 
-               params: ['C10'], 
-               initial: [0.5],
-               solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2))
-           },
-           mooney2: { 
-               params: ['C10', 'C01'], 
-               initial: [0.4, 0.1],
-               solve: (L, [C10, C01]) => 2 * (L - Math.pow(L, -2)) * (C10 + C01/L)
-           },
-           mooney3: { 
-               params: ['C10', 'C01', 'C11'], 
-               initial: [0.4, 0.1, 0.01],
-               solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3))
-           },
-           ogden2: {
-               params: ['mu1', 'alpha1', 'mu2', 'alpha2'],
-               initial: [1.0, 2.0, -0.1, -2.0],
-               solve: (L, [m1, a1, m2, a2]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1)))
-           },
-           ogden3: {
-               params: ['mu1', 'alpha1', 'mu2', 'alpha2', 'mu3', 'alpha3'],
-               initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0],
-               solve: (L, [m1, a1, m2, a2, m3, a3]) => 
-                   (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + 
-                   (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) + 
-                   (m3*(Math.pow(L, a3-1) - Math.pow(L, -0.5*a3-1)))
-           },
-           arruda: {
-               params: ['mu', 'lambda_m'],
-               initial: [0.5, 5.0],
-               solve: (L, [mu, lm]) => {
-                   const I1 = L*L + 2/L;
-                   const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375);
-                   return mu * (L - 1/(L*L)) * poly;
-               }
-           }
-       };
+    <!-- FIT TAB (unchanged from merged version) -->
+    <section id="section-fit" class="tab-content hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-1 space-y-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
+            <select id="modelSelect" onchange="runOptimization()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-6">
+              <option value="mooney2">Mooney-Rivlin (2-Term)</option>
+              <option value="mooney3">Mooney-Rivlin (3-Term)</option>
+              <option value="neo">Neo-Hookean</option>
+              <option value="ogden2">Ogden (N=2)</option>
+              <option value="ogden3">Ogden (N=3)</option>
+              <option value="arruda">Arruda-Boyce</option>
+            </select>
+            <button onclick="runOptimization()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">RECALIBRATE FIT</button>
+          </div>
+          <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
+            <div id="paramsContainer" class="space-y-3 font-mono text-sm"></div>
+            <div class="mt-6 pt-6 border-t border-slate-100">
+              <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$)</span>
+                <span id="r2Val" class="text-sm font-bold text-emerald-600">0.0000</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="lg:col-span-2 space-y-6">
+          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="chart-container">
+              <canvas id="valChart"></canvas>
+            </div>
+          </div>
+          <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner font-mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
+            <span class="text-slate-500 block mb-2"># FEA Solver Material Data (Abaqus Format)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-       function switchTab(id) {
-           document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-           document.getElementById(`section-${id}`).classList.remove('hidden');
-           document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active', 'text-slate-500'));
-           document.getElementById(`tab-${id}`).classList.add('tab-active');
-           if (id === 'fit') runOptimization();
-       }
+  <script>
+    let cleanData = [], chart = null;
+    let rawData = [], preChart = null;
 
-       function loadSample(type) {
-           const data = type === 'rubber' ? 
-               "0.00 0.00\n0.10 0.35\n0.30 0.95\n0.60 1.80\n1.00 3.20\n1.50 5.10\n2.20 8.50\n3.00 15.00" :
-               "0.00 0.00\n0.02 0.01\n0.05 0.04\n0.10 0.15\n0.15 0.40\n0.20 0.90\n0.25 1.80\n0.30 3.50";
-           document.getElementById('uniaxialInput').value = data;
-           switchTab('input');
-       }
+    const MODELS = {
+      neo: { params: ['C10'], initial: [0.5], solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2)) },
+      mooney2: { params: ['C10', 'C01'], initial: [0.4, 0.1], solve: (L, [C10, C01]) => 2 * (L - Math.pow(L, -2)) * (C10 + C01/L) },
+      mooney3: { params: ['C10', 'C01', 'C11'], initial: [0.4, 0.1, 0.01], solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3)) },
+      ogden2: { params: ['mu1', 'alpha1', 'mu2', 'alpha2'], initial: [1.0, 2.0, -0.1, -2.0], solve: (L, [m1, a1, m2, a2]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) },
+      ogden3: { params: ['mu1', 'alpha1', 'mu2', 'alpha2', 'mu3', 'alpha3'], initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0], solve: (L, [m1, a1, m2, a2, m3, a3]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) + (m3*(Math.pow(L, a3-1) - Math.pow(L, -0.5*a3-1))) },
+      arruda: { params: ['mu', 'lambda_m'], initial: [0.5, 5.0], solve: (L, [mu, lm]) => { const I1 = L*L + 2/L; const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375); return mu * (L - 1/(L*L)) * poly; } }
+    };
 
-       function preprocess() {
-           const input = document.getElementById('uniaxialInput').value;
-           let pts = input.split('\n').map(l => l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p => p.length >= 2)
-                          .map(p => ({ x: parseFloat(p[0]), y: parseFloat(p[1]) })).filter(p => !isNaN(p.x));
-           pts.sort((a,b) => a.x - b.x);
+    function switchTab(id){
+      document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
+      document.getElementById(`section-${id}`).classList.remove('hidden');
+      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-slate-500'));
+      document.getElementById(`tab-${id}`).classList.add('tab-active');
+      if(id==='fit') runOptimization();
+      if(id==='cleaning') processAndRender();
+    }
 
-           if (document.getElementById('doZero').checked && pts.length > 0) {
-               const ox = pts[0].x, oy = pts[0].y;
-               pts = pts.map(p => ({ x: p.x - ox, y: p.y - oy }));
-           }
+    // ===== Input table helpers =====
+    function addRow(strain = '', stress = ''){
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.10" value="${strain}"></td>
+        <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.35" value="${stress}"></td>
+        <td class="border-t px-1 py-1 text-right"><button class="text-xs text-red-600 hover:underline" onclick="this.closest('tr').remove()">Delete</button></td>`;
+      document.getElementById('dataBody').appendChild(tr);
+    }
 
-           const thresh = parseFloat(document.getElementById('groupThresh').value);
-           if (thresh > 0 && pts.length > 0) {
-               let grouped = [], current = [pts[0]];
-               for (let i = 1; i < pts.length; i++) {
-                   if (pts[i].x - current[0].x <= thresh) current.push(pts[i]);
-                   else {
-                       grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
-                       current = [pts[i]];
-                   }
-               }
-               grouped.push({ x: current.reduce((a,b)=>a+b.x,0)/current.length, y: current.reduce((a,b)=>a+b.y,0)/current.length });
-               pts = grouped;
-           }
-           cleanData = pts;
-       }
+    function clearTable(){ document.getElementById('dataBody').innerHTML=''; }
 
-       async function runOptimization() {
-           preprocess();
-           if (cleanData.length < 3) return;
+    function tableToTextarea(){
+      const rows = [...document.querySelectorAll('#dataBody tr')];
+      const lines = rows.map(r=>{
+        const cells = r.querySelectorAll('input');
+        const x = cells[0].value.trim();
+        const y = cells[1].value.trim();
+        return (x!=='' && y!=='') ? `${x} ${y}` : null;
+      }).filter(Boolean);
+      document.getElementById('uniaxialInput').value = lines.join('\n');
+    }
 
-           document.getElementById('statusIndicator').classList.remove('hidden');
-           const modelKey = document.getElementById('modelSelect').value;
-           const model = MODELS[modelKey];
+    function textareaToTable(){
+      const txt = document.getElementById('uniaxialInput').value || '';
+      clearTable();
+      const lines = txt.split('\n').map(l=>l.trim()).filter(Boolean);
+      if(lines.length===0){ addRow(); addRow(); return; }
+      for(const line of lines){
+        const parts = line.split(/[\s,;]+/).filter(Boolean);
+        if(parts.length>=2) addRow(parts[0], parts[1]);
+      }
+    }
 
-           // Simple Hill-Climbing / Nelder-Mead style optimization for browser stability
-           let bestParams = [...model.initial];
-           let bestError = calculateError(bestParams, model);
-           let step = 0.1;
+    async function handleFileUpload(ev){
+      const file = ev.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = (e)=>{
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, {type: 'array'});
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
+        // Find first two numeric-like columns
+        let colX = 0, colY = 1;
+        if(rows && rows.length){
+          const header = rows[0].map(v => (v||'').toString().toLowerCase());
+          header.forEach((h,i)=>{
+            if(h.includes('strain')) colX = i;
+            if(h.includes('stress')) colY = i;
+          });
+        }
+        clearTable();
+        for(const r of rows){
+          if(r[colX]===undefined || r[colY]===undefined) continue;
+          const x = String(r[colX]).trim();
+          const y = String(r[colY]).trim();
+          if(x===''||y==='') continue;
+          if(isNaN(parseFloat(x))||isNaN(parseFloat(y))) continue;
+          addRow(x, y);
+        }
+        tableToTextarea();
+      };
+      reader.readAsArrayBuffer(file);
+      ev.target.value = '';
+    }
 
-           for (let iter = 0; iter < 1000; iter++) {
-               let improved = false;
-               for (let i = 0; i < bestParams.length; i++) {
-                   for (let dir of [-1, 1]) {
-                       let nextParams = [...bestParams];
-                       nextParams[i] += step * dir;
-                       let nextError = calculateError(nextParams, model);
-                       if (nextError < bestError) {
-                           bestError = nextError;
-                           bestParams = nextParams;
-                           improved = true;
-                       }
-                   }
-               }
-               if (!improved) step *= 0.5;
-               if (step < 1e-7) break;
-           }
+    function loadSample(type){
+      const data = type==='rubber' ?
+        "0.00 0.00\n0.10 0.35\n0.30 0.95\n0.60 1.80\n1.00 3.20\n1.50 5.10\n2.20 8.50\n3.00 15.00" :
+        "0.00 0.00\n0.02 0.01\n0.05 0.04\n0.10 0.15\n0.15 0.40\n0.20 0.90\n0.25 1.80\n0.30 3.50";
+      document.getElementById('uniaxialInput').value = data;
+      textareaToTable();
+      switchTab('input');
+    }
 
-           renderResults(modelKey, bestParams, bestError);
-           document.getElementById('statusIndicator').classList.add('hidden');
-       }
+    // ===== Processing & Fitting (as in your merged version) =====
+    function processAndRender(){
+      const input = document.getElementById('uniaxialInput').value;
+      const lines = input.split('\n').map(l=>l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p=>p.length>=2);
+      rawData = lines.map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])})).filter(p=>!isNaN(p.x));
+      rawData.sort((a,b)=>a.x-b.x);
+      let pts = [...rawData];
+      const zeroBox = document.getElementById('doZero2');
+      const binInput = document.getElementById('groupThresh2');
+      if(zeroBox && zeroBox.checked && pts.length>0){ const ox=pts[0].x, oy=pts[0].y; pts = pts.map(p=>({x:p.x-ox, y:p.y-oy})); }
+      const thresh = parseFloat(binInput?binInput.value:'0.005');
+      if(thresh>0 && pts.length>0){
+        let grouped=[], current=[pts[0]];
+        for(let i=1;i<pts.length;i++){
+          if(pts[i].x - current[0].x <= thresh) current.push(pts[i]);
+          else{ grouped.push({x:avg(current,'x'), y:avg(current,'y')}); current=[pts[i]]; }
+        }
+        grouped.push({x:avg(current,'x'), y:avg(current,'y')});
+        pts = grouped;
+      }
+      cleanData = pts;
+      const statsDiv = document.getElementById('summaryStats');
+      if(statsDiv){ statsDiv.innerHTML = `Points: ${rawData.length} raw → ${cleanData.length} cleaned. Max Strain: ${cleanData.length?cleanData[cleanData.length-1].x.toFixed(3):0}`; }
+      renderPreChart([
+        {label:'Raw', data:rawData, color:'#CBD5E1'},
+        {label:'Cleaned', data:cleanData, color:'#3B82F6', pointRadius:5}
+      ]);
+    }
+    function avg(arr,k){return arr.reduce((a,b)=>a+b[k],0)/arr.length}
 
-       function calculateError(params, model) {
-           return cleanData.reduce((sum, p) => {
-               const pred = model.solve(1 + p.x, params);
-               return sum + Math.pow(pred - p.y, 2);
-           }, 0);
-       }
+    function renderPreChart(datasets){
+      const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
+      if(preChart) preChart.destroy();
+      preChart = new Chart(ctx, {
+        type:'scatter',
+        data:{ datasets: datasets.map(d=>({...d, borderColor:d.color, backgroundColor:d.color, showLine:d.showLine||false, borderWidth:2})) },
+        options:{ responsive:true, maintainAspectRatio:false,
+          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}}, y:{ title:{display:true, text:'Engineering Stress (s)'}}}
+        }
+      });
+    }
 
-       function renderResults(key, params, err) {
-           const model = MODELS[key];
-           const container = document.getElementById('paramsContainer');
-           const card = document.getElementById('resultsCard');
-           const snippet = document.getElementById('abaqusSnippet');
-           card.classList.remove('hidden');
+    async function runOptimization(){
+      // Use the data in hidden textarea (populated from table/upload) and do lightweight preprocess
+      preprocess();
+      if(cleanData.length < 3) return;
+      document.getElementById('statusIndicator').classList.remove('hidden');
+      const modelKey = document.getElementById('modelSelect').value;
+      const model = MODELS[modelKey];
+      let bestParams = [...model.initial];
+      let bestError = calculateError(bestParams, model);
+      let step = 0.1;
+      for(let iter=0; iter<1000; iter++){
+        let improved=false;
+        for(let i=0;i<bestParams.length;i++){
+          for(let dir of [-1,1]){
+            let next=[...bestParams]; next[i]+=step*dir;
+            let e = calculateError(next, model);
+            if(e<bestError){bestError=e; bestParams=next; improved=true;}
+          }
+        }
+        if(!improved) step*=0.5;
+        if(step<1e-7) break;
+      }
+      renderResults(modelKey, bestParams, bestError);
+      document.getElementById('statusIndicator').classList.add('hidden');
+    }
 
-           container.innerHTML = params.map((p, i) => `
-               <div class="flex justify-between border-b border-slate-50 pb-1">
-                   <span class="text-slate-400">${model.params[i]}</span>
-                   <span class="font-bold text-blue-700">${p.toFixed(6)}</span>
-               </div>
-           `).join('');
+    function preprocess(){
+      const input = document.getElementById('uniaxialInput').value;
+      let pts = input.split('\n').map(l=>l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p=>p.length>=2)
+        .map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])})).filter(p=>!isNaN(p.x));
+      pts.sort((a,b)=>a.x-b.x);
+      // keep same ids for optimizer-side controls? We removed card, so default behavior (no zero/group) here
+      cleanData = pts;
+    }
 
-           // R2 calculation
-           const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
-           const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY, 2), 0);
-           const r2 = 1 - (err / ssTot);
-           document.getElementById('r2Val').innerText = r2.toFixed(5);
+    function calculateError(params, model){
+      return cleanData.reduce((sum,p)=>{ const pred = model.solve(1+p.x, params); return sum + Math.pow(pred-p.y,2); },0);
+    }
 
-           // Chart
-           const maxE = cleanData[cleanData.length-1].x;
-           const curve = [];
-           for (let e=0; e<=maxE*1.1; e += maxE/50) {
-               curve.push({ x: e, y: model.solve(1+e, params) });
-           }
+    function renderResults(key, params, err){
+      const model = MODELS[key];
+      const container = document.getElementById('paramsContainer');
+      const card = document.getElementById('resultsCard');
+      const snippet = document.getElementById('abaqusSnippet');
+      card.classList.remove('hidden');
+      container.innerHTML = params.map((p,i)=>`<div class=\"flex justify-between border-b border-slate-50 pb-1\"><span class=\"text-slate-400\">${model.params[i]}</span><span class=\"font-bold text-blue-700\">${p.toFixed(6)}</span></div>`).join('');
+      const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
+      const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY,2),0);
+      const r2 = 1 - (err/ssTot);
+      document.getElementById('r2Val').innerText = r2.toFixed(5);
+      const maxE = cleanData[cleanData.length-1].x;
+      const curve=[]; for(let e=0; e<=maxE*1.1; e+= maxE/50){ curve.push({x:e, y:model.solve(1+e, params)}); }
+      const ctx = document.getElementById('valChart').getContext('2d');
+      if(chart) chart.destroy();
+      chart = new Chart(ctx, { type:'scatter', data:{ datasets:[ {label:'Experiment', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5}, {label:'Model Fit', data:curve, borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3} ] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}}, y:{ title:{display:true, text:'Engineering Stress (s)'}} } } });
+      let cmd = `*MATERIAL, NAME=USER_MATERIAL\n*HYPERELASTIC, ${key.toUpperCase().replace(/[0-9]/g,'')}`; if(key.includes('ogden')) cmd += `, N=${key.slice(-1)}`;
+      snippet.innerHTML = `<pre>${cmd}\n${params.map(p=>p.toFixed(6)).join(', ')}, 0.000</pre>`;
+    }
 
-           const ctx = document.getElementById('valChart').getContext('2d');
-           if (chart) chart.destroy();
-           chart = new Chart(ctx, {
-               type: 'scatter',
-               data: {
-                   datasets: [
-                       { label: 'Experiment', data: cleanData, backgroundColor: '#f59e0b', pointRadius: 5 },
-                       { label: 'Model Fit', data: curve, borderColor: '#1e3a8a', showLine: true, pointRadius: 0, borderWidth: 3 }
-                   ]
-               },
-               options: {
-                   responsive: true, maintainAspectRatio: false,
-                   scales: {
-                       x: { title: { display: true, text: 'Engineering Strain (ε)' }, grid: { display: false } },
-                       y: { title: { display: true, text: 'Engineering Stress (s)' } }
-                   }
-               }
-           });
-
-           // Abaqus snippet
-           let cmd = `*MATERIAL, NAME=USER_MATERIAL\n*HYPERELASTIC, ${key.toUpperCase().replace(/[0-9]/g, '')}`;
-           if (key.includes('ogden')) cmd += `, N=${key.slice(-1)}`;
-           snippet.innerHTML = `<pre>${cmd}\n${params.map(p => p.toFixed(6)).join(', ')}, 0.000</pre>`;
-       }
-
-       window.onload = () => loadSample('rubber');
-   </script>
+    window.onload = ()=>{ loadSample('rubber'); };
+  </script>
 </body>
 </html>
