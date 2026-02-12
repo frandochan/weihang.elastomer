@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Advanced Hyperelastic Fitter (Eng. Units)</title>
+  <title>Hyperelastic Model Generator</title>
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- MathJS (optional erf) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
-  <!-- SheetJS for Excel/CSV parsing -->
+  <!-- SheetJS -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
   <script>
     window.MathJax = { tex: { inlineMath: [["$", "$"]] } };
   </script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     body { font-family: 'Inter', sans-serif; overflow-x: hidden; }
@@ -21,15 +27,22 @@
     .loader { border-top-color: #3498db; animation: spinner 1.5s linear infinite; }
     @keyframes spinner { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     table.data-table input { width: 100%; padding: 0.375rem; font-variant-numeric: tabular-nums; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
   </style>
 </head>
+
 <body class="bg-slate-50 text-slate-900">
   <header class="bg-slate-900 text-white py-6 shadow-xl">
     <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
       <div>
-        <h1 class="text-3xl font-extrabold tracking-tight">Hyperelastic Fitter <span class="text-blue-400">Pro</span></h1>
-        <p class="text-slate-400 text-sm">Non-linear Parameter Optimization • Eng. Strain ($\epsilon$) & Stress ($s$)</p>
+        <h1 class="text-3xl font-extrabold tracking-tight">
+          Hyperelastic Model <span class="text-blue-400">Generator</span>
+        </h1>
+        <p class="text-slate-400 text-sm">
+          Generate hyperelastic and hyperplastic material model using experimental data.
+        </p>
       </div>
+
       <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
         <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
         <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
@@ -40,37 +53,50 @@
   <main class="max-w-7xl mx-auto px-6 py-8">
     <!-- Tabs -->
     <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
-      <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">1. Experimental Data</button>
-      <button onclick="switchTab('cleaning')" id="tab-cleaning" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">2. Preprocessing</button>
-      <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">3. Optimization & Results</button>
+      <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">
+        1. Experimental Data
+      </button>
+      <button onclick="switchTab('cleaning')" id="tab-cleaning" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
+        2. Preprocessing
+      </button>
+      <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
+        3. Optimization &amp; Results
+      </button>
     </nav>
 
     <!-- INPUT TAB -->
     <section id="section-input" class="tab-content">
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <!-- Left: Data table -->
         <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
             <div>
               <h2 class="text-lg font-bold">Uniaxial Test Data</h2>
-              <p class="text-xs text-slate-500">Enter manually in the table or <a href="#" class="text-blue-700 underline" onclick="document.getElementById('fileInput').click(); return false;">upload Excel/CSV</a>.</p>
+              <p class="text-xs text-slate-500">
+                Enter manually in the table or
+                <a href="#" class="text-blue-700 underline"
+                   onclick="document.getElementById('fileInput').click(); return false;">
+                  upload Excel/CSV
+                </a>.
+              </p>
             </div>
             <div class="flex gap-2">
-              <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Rubber</button>
-              <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">Sample Soft Tissue</button>
+              <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
+                Sample Rubber
+              </button>
+              <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
+                Sample Soft Tissue
+              </button>
             </div>
           </div>
 
-          <!-- Upload input (hidden) -->
           <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)" />
 
-          <!-- Editable table -->
           <div class="overflow-auto">
             <table class="data-table w-full border border-slate-200 rounded-xl">
               <thead class="bg-slate-50">
                 <tr>
                   <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Strain</th>
-                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Stress</th>
+                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Stress</th>
                   <th class="w-10 border-b"></th>
                 </tr>
               </thead>
@@ -78,41 +104,63 @@
             </table>
           </div>
 
-          <!-- Table controls -->
           <div class="mt-4 flex flex-wrap gap-2">
-            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="addRow()">Add Row</button>
-            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="tableToTextarea(); alert('Data captured. You can now go to Preprocessing/Optimization.');">Apply Table Data</button>
+            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="addRow()">
+              Add Row
+            </button>
+            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm"
+                    onclick="tableToTextarea(); alert('Data captured. You can now go to Preprocessing/Optimization.');">
+              Apply Table Data
+            </button>
           </div>
 
-          <!-- Hidden textarea kept for backward-compat APIs; sync from table/upload -->
           <textarea id="uniaxialInput" class="hidden"></textarea>
         </div>
 
-        <!-- Right column: (Removed previous preprocessing card as requested) -->
         <div class="space-y-6"></div>
       </div>
     </section>
 
-    <!-- CLEANING TAB (unchanged from merged version) -->
+    <!-- CLEANING TAB -->
     <section id="section-cleaning" class="tab-content hidden">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="space-y-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <h2 class="text-lg font-bold mb-4 text-blue-900">Data Processing</h2>
+
             <div class="space-y-4">
               <div class="flex items-center gap-3">
                 <input type="checkbox" id="doZero2" checked class="w-5 h-5 text-blue-600 rounded">
-                <label class="text-sm font-medium">Auto-zero stress offset</label>
+                <label class="text-sm font-medium">Auto-zero (subtract first point)</label>
               </div>
+
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="stressIsTrue" class="w-5 h-5 text-blue-600 rounded">
+                <label class="text-sm font-medium">
+                  Input stress is TRUE (Cauchy) → convert to NOMINAL (engineering): $P = \sigma / \lambda$
+                </label>
+              </div>
+
               <div>
                 <label class="block text-sm font-medium text-slate-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
                 <input type="number" id="groupThresh2" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+                <p class="mt-1 text-[11px] text-slate-500">
+                  Binning is automatically disabled when Mullins is enabled or a path-dependent model is selected (history must be preserved).
+                </p>
               </div>
-              <button onclick="processAndRender()" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">Update Cleaning</button>
+
+              <button onclick="processAndRender()"
+                      class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">
+                Update Cleaning
+              </button>
             </div>
           </div>
+
           <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
+
+          <div id="ingestDebug" class="bg-white p-4 rounded-xl border border-slate-200 text-xs mono"></div>
         </div>
+
         <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
           <h3 class="text-center text-sm font-bold text-slate-400 mb-4">Raw vs Cleaned Data</h3>
           <div class="chart-container" style="height:400px">
@@ -122,26 +170,115 @@
       </div>
     </section>
 
-    <!-- FIT TAB (unchanged from merged version) -->
+    <!-- FIT TAB -->
     <section id="section-fit" class="tab-content hidden">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div class="lg:col-span-1 space-y-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
+
             <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
-            <select id="modelSelect" onchange="runOptimization()" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-6">
+            <select id="modelSelect" onchange="runOptimization()"
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
               <option value="mooney2">Mooney-Rivlin (2-Term)</option>
               <option value="mooney3">Mooney-Rivlin (3-Term)</option>
               <option value="neo">Neo-Hookean</option>
               <option value="ogden2">Ogden (N=2)</option>
               <option value="ogden3">Ogden (N=3)</option>
               <option value="arruda">Arruda-Boyce</option>
+              <option value="exttube">Extended Tube</option>
+              <option value="bb">Bergstrom-Boyce (TB,BB)</option>
             </select>
-            <button onclick="runOptimization()" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">RECALIBRATE FIT</button>
+
+            <!-- Mullins toggle + parameters + fit button -->
+            <div class="mt-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="flex items-center gap-3">
+                <input type="checkbox" id="enableMullins" class="w-5 h-5 text-blue-600 rounded" onchange="runOptimization()">
+                <label class="text-sm font-semibold">Enable Mullins effect (Ogden–Roxburgh, TB,CDM PSE2)</label>
+              </div>
+
+              <div class="grid grid-cols-3 gap-3 mt-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">r</label>
+                  <input id="mullins_r" type="number" step="0.1" value="1.5"
+                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">m</label>
+                  <input id="mullins_m" type="number" step="1000" value="1000000"
+                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">β</label>
+                  <input id="mullins_beta" type="number" step="0.01" value="0.2"
+                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+                </div>
+              </div>
+
+              <button onclick="fitMullinsOnly()"
+                      class="mt-3 w-full py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition">
+                FIT MULLINS (unloading/reloading only)
+              </button>
+
+              <p class="text-[11px] text-slate-500 mt-2">
+                Mullins parameters affect only unloading/reloading (where W0 &lt; Wm). Run RECALIBRATE FIT (Mullins off) first to get hyperelastic params.
+              </p>
+            </div>
+
+            <!-- Debug panel -->
+            <div id="mullinsDebug"
+                 class="mt-4 p-4 rounded-xl border border-slate-200 bg-white hidden">
+              <div class="flex items-center justify-between">
+                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mullins Debug</h3>
+                <span id="mullinsActiveBadge"
+                      class="text-[10px] font-bold px-2 py-1 rounded-full border">
+                      INACTIVE
+                </span>
+              </div>
+
+              <div class="mt-3 grid grid-cols-1 gap-2 text-xs">
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Softened points (W0 &lt; Wm)</span>
+                  <span id="dbgSoftCount" class="mono font-semibold">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">Wm (max virgin energy)</span>
+                  <span id="dbgWm" class="mono font-semibold">0</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-500">η min / max</span>
+                  <span id="dbgEta" class="mono font-semibold">1 / 1</span>
+                </div>
+              </div>
+
+              <p class="text-[11px] text-slate-500 mt-2">
+                If softened points = 0 and η = 1/1, your data is monotonic (or never unloads below the max strain-energy envelope).
+              </p>
+            </div>
+
+            <!-- BB extra controls -->
+            <div class="grid grid-cols-2 gap-3 mt-4 mb-6">
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB Strain rate (1/s)</label>
+                <input id="bbRate" type="number" step="0.001" value="0.01"
+                       class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB substeps</label>
+                <input id="bbSubsteps" type="number" step="1" value="10"
+                       class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
+              </div>
+            </div>
+
+            <button onclick="runOptimization()"
+                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+              RECALIBRATE FIT
+            </button>
           </div>
+
           <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
-            <div id="paramsContainer" class="space-y-3 font-mono text-sm"></div>
+            <div id="paramsContainer" class="space-y-3 mono text-sm"></div>
             <div class="mt-6 pt-6 border-t border-slate-100">
               <div class="flex justify-between items-center mb-2">
                 <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$)</span>
@@ -150,14 +287,16 @@
             </div>
           </div>
         </div>
+
         <div class="lg:col-span-2 space-y-6">
           <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
             <div class="chart-container">
               <canvas id="valChart"></canvas>
             </div>
           </div>
-          <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner font-mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
-            <span class="text-slate-500 block mb-2"># FEA Solver Material Data (Abaqus Format)</span>
+
+          <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
+            <span class="text-slate-500 block mb-2"># Keyword-style output</span>
           </div>
         </div>
       </div>
@@ -165,18 +304,18 @@
   </main>
 
   <script>
+    // -------------------------
+    // Globals
+    // -------------------------
     let cleanData = [], chart = null;
     let rawData = [], preChart = null;
 
-    const MODELS = {
-      neo: { params: ['C10'], initial: [0.5], solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2)) },
-      mooney2: { params: ['C10', 'C01'], initial: [0.4, 0.1], solve: (L, [C10, C01]) => 2 * (L - Math.pow(L, -2)) * (C10 + C01/L) },
-      mooney3: { params: ['C10', 'C01', 'C11'], initial: [0.4, 0.1, 0.01], solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3)) },
-      ogden2: { params: ['mu1', 'alpha1', 'mu2', 'alpha2'], initial: [1.0, 2.0, -0.1, -2.0], solve: (L, [m1, a1, m2, a2]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) },
-      ogden3: { params: ['mu1', 'alpha1', 'mu2', 'alpha2', 'mu3', 'alpha3'], initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0], solve: (L, [m1, a1, m2, a2, m3, a3]) => (m1*(Math.pow(L, a1-1) - Math.pow(L, -0.5*a1-1))) + (m2*(Math.pow(L, a2-1) - Math.pow(L, -0.5*a2-1))) + (m3*(Math.pow(L, a3-1) - Math.pow(L, -0.5*a3-1))) },
-      arruda: { params: ['mu', 'lambda_m'], initial: [0.5, 5.0], solve: (L, [mu, lm]) => { const I1 = L*L + 2/L; const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375); return mu * (L - 1/(L*L)) * poly; } }
-    };
+    // last hyperelastic fit stored for Mullins-only fitting
+    let lastHyperFit = null; // { key, params }
 
+    // -------------------------
+    // Tabs
+    // -------------------------
     function switchTab(id){
       document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
       document.getElementById(`section-${id}`).classList.remove('hidden');
@@ -186,16 +325,26 @@
       if(id==='cleaning') processAndRender();
     }
 
-    // ===== Input table helpers =====
+    // -------------------------
+    // Helpers
+    // -------------------------
+    function avg(arr,k){ return arr.reduce((a,b)=>a+b[k],0)/arr.length; }
+    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+    function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+    // -------------------------
+    // Table helpers
+    // -------------------------
     function addRow(strain = '', stress = ''){
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.10" value="${strain}"></td>
         <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.35" value="${stress}"></td>
-        <td class="border-t px-1 py-1 text-right"><button class="text-xs text-red-600 hover:underline" onclick="this.closest('tr').remove()">Delete</button></td>`;
+        <td class="border-t px-1 py-1 text-right">
+          <button class="text-xs text-red-600 hover:underline" onclick="this.closest('tr').remove()">Delete</button>
+        </td>`;
       document.getElementById('dataBody').appendChild(tr);
     }
-
     function clearTable(){ document.getElementById('dataBody').innerHTML=''; }
 
     function tableToTextarea(){
@@ -228,7 +377,7 @@
         const wb = XLSX.read(data, {type: 'array'});
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
-        // Find first two numeric-like columns
+
         let colX = 0, colY = 1;
         if(rows && rows.length){
           const header = rows[0].map(v => (v||'').toString().toLowerCase());
@@ -237,6 +386,7 @@
             if(h.includes('stress')) colY = i;
           });
         }
+
         clearTable();
         for(const r of rows){
           if(r[colX]===undefined || r[colY]===undefined) continue;
@@ -261,108 +411,884 @@
       switchTab('input');
     }
 
-    // ===== Processing & Fitting (as in your merged version) =====
-    function processAndRender(){
-      const input = document.getElementById('uniaxialInput').value;
-      const lines = input.split('\n').map(l=>l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p=>p.length>=2);
-      rawData = lines.map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])})).filter(p=>!isNaN(p.x));
-      rawData.sort((a,b)=>a.x-b.x);
-      let pts = [...rawData];
+    // -------------------------
+    // Parsing with optional order preservation
+    // -------------------------
+    function parseRawFromTextarea(keepOrder=false){
+      const input = document.getElementById('uniaxialInput').value || '';
+      const lines = input.split('\n')
+        .map(l=>l.trim().split(/[\s,;]+/).filter(Boolean))
+        .filter(p=>p.length>=2);
+
+      let pts = lines
+        .map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])}))
+        .filter(p=>Number.isFinite(p.x) && Number.isFinite(p.y));
+
+      if(!keepOrder) pts.sort((a,b)=>a.x-b.x);
+      return pts;
+    }
+
+    // -------------------------
+    // Preprocessing
+    // -------------------------
+    function applyPreprocessing(pts, allowBinning=true){
+      let out = [...pts];
+
       const zeroBox = document.getElementById('doZero2');
       const binInput = document.getElementById('groupThresh2');
-      if(zeroBox && zeroBox.checked && pts.length>0){ const ox=pts[0].x, oy=pts[0].y; pts = pts.map(p=>({x:p.x-ox, y:p.y-oy})); }
-      const thresh = parseFloat(binInput?binInput.value:'0.005');
-      if(thresh>0 && pts.length>0){
-        let grouped=[], current=[pts[0]];
-        for(let i=1;i<pts.length;i++){
-          if(pts[i].x - current[0].x <= thresh) current.push(pts[i]);
-          else{ grouped.push({x:avg(current,'x'), y:avg(current,'y')}); current=[pts[i]]; }
+      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
+
+      // Auto-zero (subtract first point)
+      if(zeroBox && zeroBox.checked && out.length>0){
+        const ox = out[0].x, oy = out[0].y;
+        out = out.map(p=>({x:p.x-ox, y:p.y-oy}));
+      }
+
+      // Convert TRUE stress (Cauchy) to NOMINAL stress if requested: P = sigma / lambda
+      if(stressIsTrue){
+        out = out.map(p=>{
+          const L = 1 + p.x;
+          if(!Number.isFinite(L) || L <= 1e-12) return {x:p.x, y:NaN};
+          return {x:p.x, y:p.y / L};
+        }).filter(p=>Number.isFinite(p.y));
+      }
+
+      if(!allowBinning) return out;
+
+      const thresh = parseFloat(binInput ? binInput.value : '0.005');
+      if(Number.isFinite(thresh) && thresh>0 && out.length>0){
+        let grouped=[], current=[out[0]];
+        for(let i=1;i<out.length;i++){
+          if(out[i].x - current[0].x <= thresh) current.push(out[i]);
+          else { grouped.push({x:avg(current,'x'), y:avg(current,'y')}); current=[out[i]]; }
         }
         grouped.push({x:avg(current,'x'), y:avg(current,'y')});
-        pts = grouped;
+        out = grouped;
       }
-      cleanData = pts;
+      return out;
+    }
+
+    function getOptimizationData(){
+      const modelKey = document.getElementById('modelSelect')?.value;
+      const mullinsOn = document.getElementById('enableMullins')?.checked;
+      const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
+
+      const raw = parseRawFromTextarea(keepOrder);
+      const allowBinning = !keepOrder;
+      const useProcessed = !!(document.getElementById('doZero2')?.checked);
+
+      if(useProcessed) return applyPreprocessing(raw, allowBinning);
+      // even if not auto-zero, still allow true->nominal conversion
+      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
+      if(stressIsTrue) return applyPreprocessing(raw, allowBinning);
+      return raw;
+    }
+
+    function renderIngestDebug(rawPts, cleanedPts){
+      const div = document.getElementById('ingestDebug');
+      if(!div) return;
+
+      const stats = (pts)=>{
+        if(!pts || pts.length===0) return {n:0, xmin:0, xmax:0, ymin:0, ymax:0};
+        const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+        return {
+          n: pts.length,
+          xmin: Math.min(...xs), xmax: Math.max(...xs),
+          ymin: Math.min(...ys), ymax: Math.max(...ys)
+        };
+      };
+
+      const s0 = stats(rawPts);
+      const s1 = stats(cleanedPts);
+
+      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
+      const keepOrder = !!(document.getElementById('enableMullins')?.checked) || (MODELS[document.getElementById('modelSelect')?.value]?.pathDependent === true);
+
+      div.innerHTML =
+        `RAW: n=${s0.n}  ε[min,max]=[${s0.xmin.toExponential(3)}, ${s0.xmax.toExponential(3)}]  ` +
+        `s[min,max]=[${s0.ymin.toExponential(3)}, ${s0.ymax.toExponential(3)}]<br>` +
+        `CLEAN: n=${s1.n}  ε[min,max]=[${s1.xmin.toExponential(3)}, ${s1.xmax.toExponential(3)}]  ` +
+        `s[min,max]=[${s1.ymin.toExponential(3)}, ${s1.ymax.toExponential(3)}]<br>` +
+        `Flags: keepOrder=${keepOrder}  binning=${!keepOrder}  true→nominal=${!!stressIsTrue}`;
+    }
+
+    function processAndRender(){
+      const modelKey = document.getElementById('modelSelect')?.value;
+      const mullinsOn = document.getElementById('enableMullins')?.checked;
+      const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
+
+      rawData = parseRawFromTextarea(keepOrder);
+      const allowBinning = !keepOrder;
+      cleanData = applyPreprocessing(rawData, allowBinning);
+
       const statsDiv = document.getElementById('summaryStats');
-      if(statsDiv){ statsDiv.innerHTML = `Points: ${rawData.length} raw → ${cleanData.length} cleaned. Max Strain: ${cleanData.length?cleanData[cleanData.length-1].x.toFixed(3):0}`; }
+      if(statsDiv){
+        statsDiv.innerHTML =
+          `Points: ${rawData.length} raw → ${cleanData.length} cleaned. ` +
+          `Last strain: ${cleanData.length ? cleanData[cleanData.length-1].x.toFixed(3) : 0}`;
+      }
+
+      renderIngestDebug(rawData, cleanData);
+
       renderPreChart([
         {label:'Raw', data:rawData, color:'#CBD5E1'},
         {label:'Cleaned', data:cleanData, color:'#3B82F6', pointRadius:5}
       ]);
     }
-    function avg(arr,k){return arr.reduce((a,b)=>a+b[k],0)/arr.length}
 
     function renderPreChart(datasets){
       const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
       if(preChart) preChart.destroy();
       preChart = new Chart(ctx, {
         type:'scatter',
-        data:{ datasets: datasets.map(d=>({...d, borderColor:d.color, backgroundColor:d.color, showLine:d.showLine||false, borderWidth:2})) },
+        data:{ datasets: datasets.map(d=>({...d, borderColor:d.color, backgroundColor:d.color, showLine:false, borderWidth:2, pointRadius:d.pointRadius??3})) },
         options:{ responsive:true, maintainAspectRatio:false,
-          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}}, y:{ title:{display:true, text:'Engineering Stress (s)'}}}
+          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+                  y:{ title:{display:true, text:'Stress (input or nominal)'} } }
         }
       });
     }
 
-    async function runOptimization(){
-      // Use the data in hidden textarea (populated from table/upload) and do lightweight preprocess
-      preprocess();
-      if(cleanData.length < 3) return;
-      document.getElementById('statusIndicator').classList.remove('hidden');
-      const modelKey = document.getElementById('modelSelect').value;
-      const model = MODELS[modelKey];
-      let bestParams = [...model.initial];
-      let bestError = calculateError(bestParams, model);
-      let step = 0.1;
-      for(let iter=0; iter<1000; iter++){
-        let improved=false;
-        for(let i=0;i<bestParams.length;i++){
-          for(let dir of [-1,1]){
-            let next=[...bestParams]; next[i]+=step*dir;
-            let e = calculateError(next, model);
-            if(e<bestError){bestError=e; bestParams=next; improved=true;}
+    // -------------------------
+    // Extended Tube
+    // -------------------------
+    function extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta){
+      const J = l1*l2*l3;
+      const Jm23 = Math.pow(J, -2/3);
+      const D = Jm23 * (l1*l1 + l2*l2 + l3*l3);
+
+      const x = (delta*delta) * (D - 3);
+      const oneMinusX = 1 - x;
+      if(oneMinusX <= 1e-12) return Number.POSITIVE_INFINITY;
+
+      const gamma = (1 - delta*delta) * (D - 3) / oneMinusX;
+      const Wc = 0.5 * Gc * (gamma + Math.log(oneMinusX));
+
+      const invb2 = 1/(beta*beta);
+      const We = 2 * Ge * invb2 *
+        (Math.pow(l1, -beta) + Math.pow(l2, -beta) + Math.pow(l3, -beta) - 3);
+
+      return Wc + We;
+    }
+
+    function extendedTubeNominalStress(lambda, Gc, delta, Ge, beta){
+      if(!Number.isFinite(lambda) || lambda <= 0) return Number.NaN;
+
+      Gc = Math.max(0, Gc);
+      Ge = Math.max(0, Ge);
+      delta = Math.max(0, delta);
+      beta = clamp(beta, 1e-6, 1.0);
+
+      const l1 = lambda;
+      const l2 = 1/Math.sqrt(lambda);
+      const l3 = l2;
+
+      const eps1 = 1e-6 * Math.max(1, Math.abs(l1));
+      const eps2 = 1e-6 * Math.max(1, Math.abs(l2));
+
+      const W = (a,b,c) => extendedTubeEnergy(a,b,c,Gc,delta,Ge,beta);
+
+      const dWdl1 = (W(l1+eps1,l2,l3) - W(l1-eps1,l2,l3)) / (2*eps1);
+      const dWdl2 = (W(l1,l2+eps2,l3) - W(l1,l2-eps2,l3)) / (2*eps2);
+      if(!Number.isFinite(dWdl1) || !Number.isFinite(dWdl2)) return Number.POSITIVE_INFINITY;
+
+      const p = l2 * dWdl2;
+      return dWdl1 - p/l1;
+    }
+
+    // -------------------------
+    // Closed-form W0(λ) for hyperelastic models
+    // -------------------------
+    function uniaxialInvariants(lambda){
+      const l1 = lambda;
+      const l2 = 1/Math.sqrt(lambda);
+      const l3 = l2;
+      const I1 = l1*l1 + l2*l2 + l3*l3;
+      const I2 = (l1*l1)*(l2*l2) + (l2*l2)*(l3*l3) + (l3*l3)*(l1*l1);
+      return { l1, l2, l3, I1, I2 };
+    }
+
+    function W0_neo(lambda, C10){
+      const { I1 } = uniaxialInvariants(lambda);
+      return C10 * (I1 - 3);
+    }
+    function W0_mooney2(lambda, C10, C01){
+      const { I1, I2 } = uniaxialInvariants(lambda);
+      return C10*(I1 - 3) + C01*(I2 - 3);
+    }
+    function W0_mooney3(lambda, C10, C01, C11){
+      const { I1, I2 } = uniaxialInvariants(lambda);
+      const A=(I1-3), B=(I2-3);
+      return C10*A + C01*B + C11*A*B;
+    }
+    function W0_ogden(lambda, mus, alphas){
+      const { l1, l2, l3 } = uniaxialInvariants(lambda);
+      let W = 0;
+      for(let i=0;i<mus.length;i++){
+        const mu = mus[i], a = alphas[i];
+        W += (mu/a) * (Math.pow(l1,a) + Math.pow(l2,a) + Math.pow(l3,a) - 3);
+      }
+      return W;
+    }
+    function W0_arruda_fromYourStressPoly(lambda, mu, lm){
+      const { I1 } = uniaxialInvariants(lambda);
+      const c1 = 1/(5*lm*lm);
+      const c2 = 11/(175*Math.pow(lm,4));
+      const c3 = 19/(675*Math.pow(lm,6));
+      const c4 = 519/(67375*Math.pow(lm,8));
+
+      const term =
+        (I1 - 3) +
+        c1 * ( (I1*I1 - 9) / 2 ) +
+        c2 * ( (Math.pow(I1,3) - 27) / 3 ) +
+        c3 * ( (Math.pow(I1,4) - 81) / 4 ) +
+        c4 * ( (Math.pow(I1,5) - 243) / 5 );
+
+      return 0.5 * mu * term;
+    }
+    function W0_exttube(lambda, Gc, delta, Ge, beta){
+      const { l1, l2, l3 } = uniaxialInvariants(lambda);
+      return extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta);
+    }
+
+    function virginEnergyW0(modelKey, lambda, params){
+      switch(modelKey){
+        case 'neo':     return W0_neo(lambda, params[0]);
+        case 'mooney2': return W0_mooney2(lambda, params[0], params[1]);
+        case 'mooney3': return W0_mooney3(lambda, params[0], params[1], params[2]);
+        case 'ogden2':  return W0_ogden(lambda, [params[0], params[2]], [params[1], params[3]]);
+        case 'ogden3':  return W0_ogden(lambda, [params[0], params[2], params[4]], [params[1], params[3], params[5]]);
+        case 'arruda':  return W0_arruda_fromYourStressPoly(lambda, params[0], params[1]);
+        case 'exttube': return W0_exttube(lambda, params[0], params[1], params[2], params[3]);
+        default:        return null;
+      }
+    }
+
+    // -------------------------
+    // Mullins (Ogden–Roxburgh-like) + Debug
+    // -------------------------
+    function mullinsParams(){
+      const r = parseFloat(document.getElementById('mullins_r')?.value ?? '1.5');
+      const m = parseFloat(document.getElementById('mullins_m')?.value ?? '1000000');
+      const beta = parseFloat(document.getElementById('mullins_beta')?.value ?? '0.2');
+      return { r, m, beta };
+    }
+
+    function erfSafe(x){
+      if (window.math && typeof math.erf === 'function') return math.erf(x);
+      const sign = x < 0 ? -1 : 1;
+      x = Math.abs(x);
+      const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+      const t = 1/(1+p*x);
+      const y = 1 - (((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
+      return sign*y;
+    }
+
+    function mullinsEta(W0, Wm, r, m, beta){
+      if (W0 >= Wm - 1e-14) return 1.0;
+      const denom = (m + beta*Wm);
+      const arg = (Wm - W0) / Math.max(1e-12, denom);
+      const eta = 1.0 - (1.0/Math.max(1e-12, r)) * erfSafe(arg);
+      return clamp01(eta);
+    }
+
+    // Returns { stress: [...], debug: { softenedCount, Wm, etaMin, etaMax } }
+    function applyMullinsToStressSeries(modelKey, strainPts, stressVirgin, params){
+      const { r, m, beta } = mullinsParams();
+
+      let Wm = -Infinity;
+      let etaMin = 1.0;
+      let etaMax = 1.0;
+      let softenedCount = 0;
+
+      const out = new Array(stressVirgin.length);
+
+      for(let i=0;i<strainPts.length;i++){
+        const lambda = Math.max(1e-12, 1 + strainPts[i].x);
+        const W0 = virginEnergyW0(modelKey, lambda, params);
+
+        if(W0 === null || !Number.isFinite(W0)){
+          out[i] = stressVirgin[i];
+          continue;
+        }
+
+        if(W0 > Wm) Wm = W0;
+
+        let eta = 1.0;
+        if(W0 < Wm - 1e-12){
+          softenedCount++;
+          eta = mullinsEta(W0, Wm, r, m, beta);
+        } else {
+          eta = 1.0;
+        }
+
+        etaMin = Math.min(etaMin, eta);
+        etaMax = Math.max(etaMax, eta);
+
+        out[i] = eta * stressVirgin[i];
+      }
+
+      if(!Number.isFinite(Wm)) Wm = 0;
+
+      return {
+        stress: out,
+        debug: { softenedCount, Wm, etaMin, etaMax }
+      };
+    }
+
+    function updateMullinsDebugPanel(debug){
+      const panel = document.getElementById('mullinsDebug');
+      const badge = document.getElementById('mullinsActiveBadge');
+      const softEl = document.getElementById('dbgSoftCount');
+      const wmEl = document.getElementById('dbgWm');
+      const etaEl = document.getElementById('dbgEta');
+
+      panel.classList.remove('hidden');
+
+      softEl.textContent = String(debug.softenedCount ?? 0);
+      wmEl.textContent = (debug.Wm ?? 0).toExponential(4);
+      etaEl.textContent = `${(debug.etaMin ?? 1).toFixed(6)} / ${(debug.etaMax ?? 1).toFixed(6)}`;
+
+      const active = (debug.softenedCount ?? 0) > 0 && (debug.etaMin ?? 1) < 0.999999;
+      if(active){
+        badge.textContent = "ACTIVE";
+        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-400 bg-emerald-50 text-emerald-700";
+      } else {
+        badge.textContent = "INACTIVE";
+        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full border border-slate-300 bg-slate-50 text-slate-600";
+      }
+    }
+
+    function hideMullinsDebugPanel(){
+      const panel = document.getElementById('mullinsDebug');
+      panel.classList.add('hidden');
+    }
+
+    // -------------------------
+    // Bergstrom–Boyce (BB) practical uniaxial implementation
+    // -------------------------
+    function invLangevinPade(x){
+      const ax = Math.abs(x);
+      if(ax < 0.84136){
+        return 1.31446 * Math.tan(1.58986 * x) + 0.91209 * x;
+      }
+      const s = (x >= 0) ? 1 : -1;
+      const denom = (s - x);
+      return 1 / (denom === 0 ? 1e-12 : denom);
+    }
+
+    function jChainUniax(lambda){
+      return Math.sqrt((lambda*lambda + 2.0/lambda)/3.0);
+    }
+
+    function chainNominalStress_AB_like(lambda, mu, jlock){
+      lambda = Math.max(1e-8, lambda);
+      mu = Math.max(0, mu);
+      jlock = Math.max(1.01, jlock);
+
+      const j = jChainUniax(lambda);
+      const x = Math.min(0.999999, j / jlock);
+      const invL = invLangevinPade(x);
+
+      const base = (lambda - Math.pow(lambda, -2));
+      return (mu/3.0) * (base / Math.max(1e-12, j)) * invL;
+    }
+
+    function bbPredictSeries(strainPts, params){
+      const muA = Math.max(0, params[0]);
+      const jA  = Math.max(1.01, params[1]);
+      const muB = Math.max(0, params[2]);
+      const jB  = Math.max(1.01, params[3]);
+      const gamma0 = Math.max(0, params[4]);
+      const Cexp = params[5];
+      const mexp = Math.max(0, params[6]);
+
+      const rate = Math.max(1e-9, parseFloat(document.getElementById('bbRate')?.value || "0.01"));
+      const substeps = Math.max(1, parseInt(document.getElementById('bbSubsteps')?.value || "10", 10));
+
+      let q = 0.0;
+      const preds = [];
+      let prevE = null;
+
+      for(const p of strainPts){
+        const e = p.x;
+        const lambda = Math.max(1e-8, 1 + e);
+
+        if(prevE !== null){
+          const de = e - prevE;
+          const dt = Math.abs(de) / rate;
+          const dtSub = dt / substeps;
+
+          for(let k=0;k<substeps;k++){
+            const lambdaV = Math.max(1e-8, 1 + q);
+            const lambdaE = lambda / lambdaV;
+
+            const sigB = chainNominalStress_AB_like(lambdaE, muB, jB);
+            const tau = Math.sqrt(2/3) * Math.abs(sigB);
+
+            const jv = jChainUniax(lambdaV);
+            const drive = Math.max(0, jv - 1);
+
+            const gammaDot = gamma0 * Math.pow(drive, Cexp) * Math.pow(tau, mexp);
+            const sign = (sigB >= 0) ? 1 : -1;
+            const qdot = lambdaV * gammaDot * sign;
+
+            q += qdot * dtSub;
+            q = Math.max(-0.9, q);
           }
         }
-        if(!improved) step*=0.5;
-        if(step<1e-7) break;
+
+        const sigA = chainNominalStress_AB_like(lambda, muA, jA);
+        const lambdaV_now = Math.max(1e-8, 1 + q);
+        const lambdaE_now = lambda / lambdaV_now;
+        const sigB_now = chainNominalStress_AB_like(lambdaE_now, muB, jB);
+
+        preds.push(sigA + sigB_now);
+        prevE = e;
       }
+      return preds;
+    }
+
+    // -------------------------
+    // Models
+    // -------------------------
+    const MODELS = {
+      neo: {
+        params: ['C10'],
+        initial: [0.5],
+        pathDependent: false,
+        solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2))
+      },
+      mooney2: {
+        params: ['C10','C01'],
+        initial: [0.4, 0.1],
+        pathDependent: false,
+        solve: (L, [C10, C01]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L)
+      },
+      mooney3: {
+        params: ['C10','C01','C11'],
+        initial: [0.4, 0.1, 0.01],
+        pathDependent: false,
+        solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3))
+      },
+      ogden2: {
+        params: ['mu1','alpha1','mu2','alpha2'],
+        initial: [1.0, 2.0, -0.1, -2.0],
+        pathDependent: false,
+        solve: (L, [m1,a1,m2,a2]) =>
+          (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
+          (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1)))
+      },
+      ogden3: {
+        params: ['mu1','alpha1','mu2','alpha2','mu3','alpha3'],
+        initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0],
+        pathDependent: false,
+        solve: (L, [m1,a1,m2,a2,m3,a3]) =>
+          (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
+          (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1))) +
+          (m3*(Math.pow(L,a3-1) - Math.pow(L,-0.5*a3-1)))
+      },
+      arruda: {
+        params: ['mu','lambda_m'],
+        initial: [0.5, 5.0],
+        pathDependent: false,
+        solve: (L, [mu, lm]) => {
+          const I1 = L*L + 2/L;
+          const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375);
+          return mu * (L - 1/(L*L)) * poly;
+        }
+      },
+      exttube: {
+        params: ['Gc','delta','Ge','beta'],
+        initial: [0.5, 0.10, 0.2, 0.7],
+        pathDependent: false,
+        solve: (L, [Gc, delta, Ge, beta]) => extendedTubeNominalStress(L, Gc, delta, Ge, beta)
+      },
+      bb: {
+        params: ['muA','jA_lock','muB','jB_lock','gamma0','C','m'],
+        initial: [0.5, 2.5, 0.5, 2.5, 0.01, -1.0, 4.0],
+        pathDependent: true,
+        predictSeries: (pts, params) => bbPredictSeries(pts, params)
+      }
+    };
+
+    // -------------------------
+    // Prediction
+    // -------------------------
+    function predictStressSeries(modelKey, params){
+      const model = MODELS[modelKey];
+      const mullinsOn = document.getElementById('enableMullins')?.checked;
+
+      if(model.pathDependent){
+        hideMullinsDebugPanel();
+        return { stress: model.predictSeries(cleanData, params), debug: null, usedMullins: false };
+      }
+
+      const sig0 = cleanData.map(p => model.solve(1+p.x, params));
+
+      if(mullinsOn){
+        const testW = virginEnergyW0(modelKey, Math.max(1e-12, 1+cleanData[0].x), params);
+        if(testW !== null){
+          const out = applyMullinsToStressSeries(modelKey, cleanData, sig0, params);
+          updateMullinsDebugPanel(out.debug);
+          return { stress: out.stress, debug: out.debug, usedMullins: true };
+        }
+      }
+
+      hideMullinsDebugPanel();
+      return { stress: sig0, debug: null, usedMullins: false };
+    }
+
+    // -------------------------
+    // Closed-form least squares for neo/mooney2/mooney3 (robust)
+    // -------------------------
+    function fitLinearHyperelastic(modelKey, pts){
+      const n = pts.length;
+      if(n < 3) return null;
+      if(!(modelKey === 'neo' || modelKey === 'mooney2' || modelKey === 'mooney3')) return null;
+
+      const ridge = 1e-12;
+      const rows = [];
+      const b = [];
+
+      for(const p of pts){
+        const e = p.x;
+        const y = p.y;
+        const L = Math.max(1e-12, 1 + e);
+        const basis = (L - Math.pow(L, -2));
+        const f1 = 2*basis;
+
+        if(modelKey === 'neo'){
+          rows.push([f1]); b.push(y);
+        } else if(modelKey === 'mooney2'){
+          rows.push([f1, f1/L]); b.push(y);
+        } else if(modelKey === 'mooney3'){
+          const f3 = f1*(L*L + 2/L - 3);
+          rows.push([f1, f1/L, f3]); b.push(y);
+        }
+      }
+
+      const m = rows[0].length;
+      const ATA = Array.from({length:m}, ()=>Array(m).fill(0));
+      const ATb = Array(m).fill(0);
+
+      for(let i=0;i<n;i++){
+        const r = rows[i];
+        for(let a=0;a<m;a++){
+          ATb[a] += r[a]*b[i];
+          for(let c=0;c<m;c++){
+            ATA[a][c] += r[a]*r[c];
+          }
+        }
+      }
+      for(let a=0;a<m;a++) ATA[a][a] += ridge;
+
+      // Gaussian elimination
+      const M = ATA.map((row,i)=>row.concat([ATb[i]]));
+      for(let k=0;k<m;k++){
+        let piv = k;
+        for(let i=k+1;i<m;i++) if(Math.abs(M[i][k]) > Math.abs(M[piv][k])) piv = i;
+        [M[k], M[piv]] = [M[piv], M[k]];
+
+        const d = M[k][k] || 1e-30;
+        for(let j=k;j<m+1;j++) M[k][j] /= d;
+
+        for(let i=0;i<m;i++){
+          if(i===k) continue;
+          const f = M[i][k];
+          for(let j=k;j<m+1;j++) M[i][j] -= f*M[k][j];
+        }
+      }
+      const p = M.map(r=>r[m]);
+
+      if(modelKey === 'neo') return [p[0]];
+      if(modelKey === 'mooney2') return [p[0], p[1]];
+      if(modelKey === 'mooney3') return [p[0], p[1], p[2]];
+      return null;
+    }
+
+    // -------------------------
+    // Optimization (NaN/Inf safe)
+    // -------------------------
+    async function runOptimization(){
+      tableToTextarea();
+      cleanData = getOptimizationData();
+      if(cleanData.length < 3) return;
+
+      document.getElementById('statusIndicator').classList.remove('hidden');
+
+      const modelKey = document.getElementById('modelSelect').value;
+      const model = MODELS[modelKey];
+
+      // If linear-in-params model (neo/mooney2/mooney3), do closed-form LS
+      const closed = fitLinearHyperelastic(modelKey, cleanData);
+      if(closed){
+        const err = calculateError(modelKey, closed);
+        renderResults(modelKey, closed, err);
+        document.getElementById('statusIndicator').classList.add('hidden');
+        return;
+      }
+
+      let bestParams = [...model.initial];
+      let bestError = calculateError(modelKey, bestParams);
+      if(!Number.isFinite(bestError)) bestError = Number.POSITIVE_INFINITY;
+
+      let step = 0.1;
+      const iters = (modelKey === 'bb') ? 450 : 900;
+
+      for(let iter=0; iter<iters; iter++){
+        let improved=false;
+
+        for(let i=0;i<bestParams.length;i++){
+          for(let dir of [-1,1]){
+            let next=[...bestParams];
+            next[i]+=step*dir;
+
+            if(modelKey==='exttube'){
+              if(model.params[i]==='beta') next[i]=clamp(next[i], 1e-6, 1.0);
+              if(model.params[i]==='delta') next[i]=Math.max(0, next[i]);
+              if(model.params[i]==='Gc' || model.params[i]==='Ge') next[i]=Math.max(0, next[i]);
+            }
+            if(modelKey==='bb'){
+              if(model.params[i].includes('mu')) next[i]=Math.max(0, next[i]);
+              if(model.params[i].includes('lock')) next[i]=Math.max(1.01, next[i]);
+              if(model.params[i]==='gamma0') next[i]=Math.max(0, next[i]);
+              if(model.params[i]==='m') next[i]=Math.max(0, next[i]);
+            }
+
+            const e = calculateError(modelKey, next);
+            if(!Number.isFinite(e)) continue;
+
+            if(e < bestError){
+              bestError = e;
+              bestParams = next;
+              improved = true;
+            }
+          }
+        }
+        if(!improved) step *= 0.5;
+        if(step < 1e-6) break;
+      }
+
       renderResults(modelKey, bestParams, bestError);
       document.getElementById('statusIndicator').classList.add('hidden');
     }
 
-    function preprocess(){
-      const input = document.getElementById('uniaxialInput').value;
-      let pts = input.split('\n').map(l=>l.trim().split(/[\s,;]+/).filter(Boolean)).filter(p=>p.length>=2)
-        .map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])})).filter(p=>!isNaN(p.x));
-      pts.sort((a,b)=>a.x-b.x);
-      // keep same ids for optimizer-side controls? We removed card, so default behavior (no zero/group) here
-      cleanData = pts;
+    function calculateError(modelKey, params){
+      const predObj = predictStressSeries(modelKey, params);
+      const preds = predObj.stress;
+
+      if(!preds || preds.length !== cleanData.length) return Number.POSITIVE_INFINITY;
+
+      let sum = 0;
+      for(let i=0;i<cleanData.length;i++){
+        const yi = cleanData[i].y;
+        const pi = preds[i];
+        if(!Number.isFinite(pi) || !Number.isFinite(yi)) return Number.POSITIVE_INFINITY;
+        const r = pi - yi;
+        sum += r*r;
+      }
+      return sum;
     }
 
-    function calculateError(params, model){
-      return cleanData.reduce((sum,p)=>{ const pred = model.solve(1+p.x, params); return sum + Math.pow(pred-p.y,2); },0);
-    }
-
+    // -------------------------
+    // Render results
+    // -------------------------
     function renderResults(key, params, err){
       const model = MODELS[key];
       const container = document.getElementById('paramsContainer');
       const card = document.getElementById('resultsCard');
       const snippet = document.getElementById('abaqusSnippet');
+
+      if(!model.pathDependent) lastHyperFit = { key, params: [...params] };
+
       card.classList.remove('hidden');
-      container.innerHTML = params.map((p,i)=>`<div class=\"flex justify-between border-b border-slate-50 pb-1\"><span class=\"text-slate-400\">${model.params[i]}</span><span class=\"font-bold text-blue-700\">${p.toFixed(6)}</span></div>`).join('');
+      container.innerHTML = params.map((p,i)=>
+        `<div class="flex justify-between border-b border-slate-50 pb-1">
+           <span class="text-slate-400">${model.params[i]}</span>
+           <span class="font-bold text-blue-700">${Number.isFinite(p) ? p.toFixed(6) : String(p)}</span>
+         </div>`
+      ).join('');
+
       const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
       const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY,2),0);
-      const r2 = 1 - (err/ssTot);
+      const r2 = (ssTot > 0 && Number.isFinite(err)) ? (1 - (err/ssTot)) : 0;
       document.getElementById('r2Val').innerText = r2.toFixed(5);
-      const maxE = cleanData[cleanData.length-1].x;
-      const curve=[]; for(let e=0; e<=maxE*1.1; e+= maxE/50){ curve.push({x:e, y:model.solve(1+e, params)}); }
+
+      const predObj = predictStressSeries(key, params);
+      const preds = predObj.stress;
+
+      const mullinsOn = document.getElementById('enableMullins')?.checked;
+      const maxE = Math.max(...cleanData.map(p=>p.x));
+      let curve = [];
+
+      if(mullinsOn || model.pathDependent){
+        curve = cleanData.map((p,i)=>({x:p.x, y:preds[i]}));
+      } else {
+        for(let e=0; e<=maxE*1.1; e+= (maxE*1.1)/60){
+          curve.push({x:e, y:model.solve(1+e, params)});
+        }
+      }
+
       const ctx = document.getElementById('valChart').getContext('2d');
       if(chart) chart.destroy();
-      chart = new Chart(ctx, { type:'scatter', data:{ datasets:[ {label:'Experiment', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5}, {label:'Model Fit', data:curve, borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3} ] }, options:{ responsive:true, maintainAspectRatio:false, scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}}, y:{ title:{display:true, text:'Engineering Stress (s)'}} } } });
-      let cmd = `*MATERIAL, NAME=USER_MATERIAL\n*HYPERELASTIC, ${key.toUpperCase().replace(/[0-9]/g,'')}`; if(key.includes('ogden')) cmd += `, N=${key.slice(-1)}`;
-      snippet.innerHTML = `<pre>${cmd}\n${params.map(p=>p.toFixed(6)).join(', ')}, 0.000</pre>`;
+      chart = new Chart(ctx, {
+        type:'scatter',
+        data:{ datasets:[
+          {label:'Experiment (cleaned)', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5, showLine:false},
+          {label:'Model Fit', data:curve, borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3}
+        ]},
+        options:{ responsive:true, maintainAspectRatio:false,
+          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+                  y:{ title:{display:true, text:'Stress (nominal used for fit)'} } }
+        }
+      });
+
+      const mull = document.getElementById('enableMullins')?.checked ? mullinsParams() : null;
+
+      if(key === 'bb'){
+        snippet.innerHTML =
+          `<pre># Bergstrom-Boyce (uniaxial, rate-dependent)
+muA=${params[0].toFixed(6)}, jA_lock=${params[1].toFixed(6)}
+muB=${params[2].toFixed(6)}, jB_lock=${params[3].toFixed(6)}
+gamma0=${params[4].toFixed(6)}, C=${params[5].toFixed(6)}, m=${params[6].toFixed(6)}
+bbRate=${parseFloat(document.getElementById('bbRate').value)}, bbSubsteps=${parseInt(document.getElementById('bbSubsteps').value,10)}
+# Note: Mullins toggle is not applied to BB in this web tool.
+</pre>`;
+      } else {
+        snippet.innerHTML =
+          `<pre># Hyperelastic (${key}) parameters
+${model.params.map((n,i)=>`${n}=${params[i].toFixed(6)}`).join(', ')}
+${mull ? `# Mullins (PSE2-like): r=${mull.r}, m=${mull.m}, beta=${mull.beta}` : ``}
+</pre>`;
+      }
     }
 
+    // -------------------------
+    // Mullins-only fitting (unloading/reloading points only)
+    // -------------------------
+    function getSoftenedIndices(modelKey, dataPts, hyperParams){
+      let Wm = -Infinity;
+      const idx = [];
+      for(let i=0;i<dataPts.length;i++){
+        const lambda = Math.max(1e-12, 1 + dataPts[i].x);
+        const W0 = virginEnergyW0(modelKey, lambda, hyperParams);
+        if(W0 === null || !Number.isFinite(W0)) continue;
+        if(W0 < Wm - 1e-12) idx.push(i);
+        Wm = Math.max(Wm, W0);
+      }
+      return idx;
+    }
+
+    function mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, r, m, beta){
+      if(!(r > 0 && m > 0)) return Number.POSITIVE_INFINITY;
+
+      let Wm = -Infinity;
+      const softSet = new Set(softIdx);
+      let sse = 0;
+      let used = 0;
+
+      for(let i=0;i<dataPts.length;i++){
+        const lambda = Math.max(1e-12, 1 + dataPts[i].x);
+        const W0 = virginEnergyW0(modelKey, lambda, hyperParams);
+        if(W0 === null || !Number.isFinite(W0)) continue;
+
+        Wm = Math.max(Wm, W0);
+
+        if(!softSet.has(i)) continue;
+
+        if((m + beta*Wm) <= 1e-12) return Number.POSITIVE_INFINITY;
+
+        const eta = mullinsEta(W0, Wm, r, m, beta);
+        const pred = eta * sig0[i];
+        const res = pred - dataPts[i].y;
+        sse += res*res;
+        used++;
+      }
+
+      return (used >= 3) ? sse : Number.POSITIVE_INFINITY;
+    }
+
+    function fitMullinsOnly(){
+      const modelKey = document.getElementById('modelSelect').value;
+      const model = MODELS[modelKey];
+
+      if(model.pathDependent){
+        alert("Mullins-only fitting is intended for hyperelastic models (not BB).");
+        return;
+      }
+      if(!lastHyperFit || lastHyperFit.key !== modelKey){
+        alert("Run RECALIBRATE FIT first (with Mullins OFF) for the selected hyperelastic model, then press FIT MULLINS.");
+        return;
+      }
+
+      const dataPts = cleanData;
+      const hyperParams = [...lastHyperFit.params];
+
+      const sig0 = dataPts.map(p => model.solve(1+p.x, hyperParams));
+
+      const softIdx = getSoftenedIndices(modelKey, dataPts, hyperParams);
+      if(softIdx.length < 3){
+        alert("No unloading/reloading softened points detected.\nPaste cyclic data (load-unload-reload) and ensure order is preserved.");
+        return;
+      }
+
+      let r0 = Math.max(1e-6, parseFloat(document.getElementById('mullins_r').value || '1.5'));
+      let m0 = Math.max(1e-6, parseFloat(document.getElementById('mullins_m').value || '1000000'));
+      let b0 = parseFloat(document.getElementById('mullins_beta').value || '0.2');
+
+      let v = [Math.log(r0), Math.log(m0), b0];
+      let step = [0.35, 0.90, 0.05];
+
+      let best = { r: Math.exp(v[0]), m: Math.exp(v[1]), beta: v[2] };
+      let bestE = mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, best.r, best.m, best.beta);
+
+      for(let it=0; it<250; it++){
+        let improved = false;
+
+        for(let k=0; k<3; k++){
+          for(const sgn of [-1, +1]){
+            const vt = [...v];
+            vt[k] += sgn * step[k];
+
+            const cand = {
+              r: Math.exp(vt[0]),
+              m: Math.exp(vt[1]),
+              beta: clamp(vt[2], -1.0, 5.0)
+            };
+
+            const e = mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, cand.r, cand.m, cand.beta);
+            if(e < bestE){
+              bestE = e;
+              best = cand;
+              v = vt;
+              improved = true;
+            }
+          }
+        }
+
+        if(!improved){
+          step = step.map(x => x*0.75);
+          if(step[0] < 1e-4 && step[1] < 1e-4 && step[2] < 1e-4) break;
+        }
+      }
+
+      document.getElementById('mullins_r').value = best.r.toPrecision(6);
+      document.getElementById('mullins_m').value = best.m.toPrecision(6);
+      document.getElementById('mullins_beta').value = best.beta.toPrecision(6);
+      document.getElementById('enableMullins').checked = true;
+
+      const errAll = calculateError(modelKey, hyperParams);
+      renderResults(modelKey, hyperParams, errAll);
+
+      alert(`Mullins fit complete (unloading only).\nSSE_unloading = ${bestE.toExponential(3)}\nSoftened points used: ${softIdx.length}`);
+    }
+
+    // -------------------------
+    // Init
+    // -------------------------
     window.onload = ()=>{ loadSample('rubber'); };
   </script>
 </body>
 </html>
+``
