@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hyperelastic Model Generator</title>
+  <title>Hyperelastic Model Generator (Live Optimization)</title>
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -39,13 +39,20 @@
           Hyperelastic Model <span class="text-blue-400">Generator</span>
         </h1>
         <p class="text-slate-400 text-sm">
-          Generate hyperelastic and hyperplastic material model using experimental data.
+          Generate hyperelastic and hyperplastic material model using experimental data
         </p>
       </div>
 
-      <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
-        <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
-        <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
+      <div class="flex items-center gap-3">
+        <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
+          <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
+          <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
+        </div>
+
+        <button id="stopBtn" onclick="stopOptimization()"
+          class="hidden px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-xs font-bold uppercase tracking-widest">
+          Stop
+        </button>
       </div>
     </div>
   </header>
@@ -145,7 +152,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
                 <input type="number" id="groupThresh2" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm">
                 <p class="mt-1 text-[11px] text-slate-500">
-                  Binning is automatically disabled when Mullins is enabled or a path-dependent model is selected (history must be preserved).
+                  Binning is disabled when Mullins is enabled or a path-dependent model is selected (history must be preserved).
                 </p>
               </div>
 
@@ -157,7 +164,6 @@
           </div>
 
           <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
-
           <div id="ingestDebug" class="bg-white p-4 rounded-xl border border-slate-200 text-xs mono"></div>
         </div>
 
@@ -190,11 +196,47 @@
               <option value="bb">Bergstrom-Boyce (TB,BB)</option>
             </select>
 
-            <!-- Mullins toggle + parameters + fit button -->
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Optimizer</label>
+            <select id="optimizerSelect"
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
+              <option value="pattern">Pattern Search (MCal Random Walk)</option>
+              <option value="nelder">Nelder–Mead (local)</option>
+              <option value="de">Differential Evolution (global)</option>
+              <option value="ga">Genetic Algorithm (global)</option>
+              <option value="hybrid_de_nelder" selected>Hybrid: DE → Nelder–Mead</option>
+            </select>
+
+            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Error Norm / Weighting</label>
+            <select id="errorWeightSelect"
+                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
+              <option value="mcal" selected>MCalibration-style (low-strain dominant)</option>
+              <option value="uniform">Uniform SSE</option>
+              <option value="highstrain">High-strain weighted</option>
+              <option value="normalized">Normalized (relative)</option>
+              <option value="log">Log-stress (optional)</option>
+            </select>
+
             <div class="mt-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+              <div class="flex items-center justify-between gap-3">
+                <label class="flex items-center gap-2 text-sm font-semibold">
+                  <input id="liveUpdate" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                  Curve update
+                </label>
+
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-slate-500 uppercase">Every</span>
+                  <input id="liveEvery" type="number" value="10" min="1" step="1"
+                         class="w-20 p-2 border border-slate-200 rounded-lg text-sm bg-white">
+                  <span class="text-xs text-slate-500">iters/gen</span>
+                </div>
+              </div>
+              <div id="liveStatus" class="mt-2 text-xs text-slate-600 mono">Idle.</div>
+            </div>
+
+            <div class="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50">
               <div class="flex items-center gap-3">
-                <input type="checkbox" id="enableMullins" class="w-5 h-5 text-blue-600 rounded" onchange="runOptimization()">
-                <label class="text-sm font-semibold">Enable Mullins effect (Ogden–Roxburgh, TB,CDM PSE2)</label>
+                <input type="checkbox" id="enableMullins" class="w-5 h-5 text-blue-600 rounded">
+                <label class="text-sm font-semibold">Enable Mullins effect (Ogden–Roxburgh-like)</label>
               </div>
 
               <div class="grid grid-cols-3 gap-3 mt-3">
@@ -215,49 +257,12 @@
                 </div>
               </div>
 
-              <button onclick="fitMullinsOnly()"
-                      class="mt-3 w-full py-2 bg-slate-900 text-white font-bold rounded-xl hover:bg-slate-800 transition">
-                FIT MULLINS (unloading/reloading only)
-              </button>
-
               <p class="text-[11px] text-slate-500 mt-2">
-                Mullins parameters affect only unloading/reloading (where W0 &lt; Wm). Run RECALIBRATE FIT (Mullins off) first to get hyperelastic params.
+                Mullins affects unloading/reloading only. For monotonic data it often stays inactive.
               </p>
             </div>
 
-            <!-- Debug panel -->
-            <div id="mullinsDebug"
-                 class="mt-4 p-4 rounded-xl border border-slate-200 bg-white hidden">
-              <div class="flex items-center justify-between">
-                <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Mullins Debug</h3>
-                <span id="mullinsActiveBadge"
-                      class="text-[10px] font-bold px-2 py-1 rounded-full border">
-                      INACTIVE
-                </span>
-              </div>
-
-              <div class="mt-3 grid grid-cols-1 gap-2 text-xs">
-                <div class="flex justify-between">
-                  <span class="text-slate-500">Softened points (W0 &lt; Wm)</span>
-                  <span id="dbgSoftCount" class="mono font-semibold">0</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-500">Wm (max virgin energy)</span>
-                  <span id="dbgWm" class="mono font-semibold">0</span>
-                </div>
-                <div class="flex justify-between">
-                  <span class="text-slate-500">η min / max</span>
-                  <span id="dbgEta" class="mono font-semibold">1 / 1</span>
-                </div>
-              </div>
-
-              <p class="text-[11px] text-slate-500 mt-2">
-                If softened points = 0 and η = 1/1, your data is monotonic (or never unloads below the max strain-energy envelope).
-              </p>
-            </div>
-
-            <!-- BB extra controls -->
-            <div class="grid grid-cols-2 gap-3 mt-4 mb-6">
+            <div class="grid grid-cols-2 gap-3 mt-4 mb-4">
               <div>
                 <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB Strain rate (1/s)</label>
                 <input id="bbRate" type="number" step="0.001" value="0.01"
@@ -281,7 +286,7 @@
             <div id="paramsContainer" class="space-y-3 mono text-sm"></div>
             <div class="mt-6 pt-6 border-t border-slate-100">
               <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$)</span>
+                <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$) (informational)</span>
                 <span id="r2Val" class="text-sm font-bold text-emerald-600">0.0000</span>
               </div>
             </div>
@@ -293,6 +298,9 @@
             <div class="chart-container">
               <canvas id="valChart"></canvas>
             </div>
+            <p class="mt-2 text-xs text-slate-500">
+              Blue = Best-so-far, Green dashed = Current candidate.
+            </p>
           </div>
 
           <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
@@ -310,8 +318,8 @@
     let cleanData = [], chart = null;
     let rawData = [], preChart = null;
 
-    // last hyperelastic fit stored for Mullins-only fitting
-    let lastHyperFit = null; // { key, params }
+    let stopFlag = false;
+    function stopOptimization(){ stopFlag = true; }
 
     // -------------------------
     // Tabs
@@ -321,8 +329,9 @@
       document.getElementById(`section-${id}`).classList.remove('hidden');
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-slate-500'));
       document.getElementById(`tab-${id}`).classList.add('tab-active');
-      if(id==='fit') runOptimization();
+
       if(id==='cleaning') processAndRender();
+      if(id==='fit') runOptimization();
     }
 
     // -------------------------
@@ -331,6 +340,15 @@
     function avg(arr,k){ return arr.reduce((a,b)=>a+b[k],0)/arr.length; }
     function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
     function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+    function randn(){
+      let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+      return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+    }
+    function jitterAround(base, rel=0.25){
+      return base.map(x => x + (Math.abs(x)+1)*rel*randn());
+    }
+    async function yieldToUI(){ await new Promise(requestAnimationFrame); }
 
     // -------------------------
     // Table helpers
@@ -370,7 +388,14 @@
     }
 
     async function handleFileUpload(ev){
-      const file = ev.target.files[0]; if(!file) return;
+      const file = ev.target.files[0];
+      if(!file) return;
+
+      if(typeof XLSX === 'undefined'){
+        alert("SheetJS (XLSX) not loaded. Check the script tag.");
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (e)=>{
         const data = new Uint8Array(e.target.result);
@@ -378,23 +403,27 @@
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
 
-        let colX = 0, colY = 1;
-        if(rows && rows.length){
-          const header = rows[0].map(v => (v||'').toString().toLowerCase());
-          header.forEach((h,i)=>{
-            if(h.includes('strain')) colX = i;
-            if(h.includes('stress')) colY = i;
-          });
+        if(!rows || rows.length < 1){
+          alert("No data found in file.");
+          return;
         }
 
+        // header detection
+        let colX = 0, colY = 1;
+        const header = (rows[0] || []).map(v => (v||'').toString().toLowerCase());
+        header.forEach((h,i)=>{
+          if(h.includes('strain')) colX = i;
+          if(h.includes('stress')) colY = i;
+        });
+
         clearTable();
-        for(const r of rows){
-          if(r[colX]===undefined || r[colY]===undefined) continue;
-          const x = String(r[colX]).trim();
-          const y = String(r[colY]).trim();
-          if(x===''||y==='') continue;
-          if(isNaN(parseFloat(x))||isNaN(parseFloat(y))) continue;
-          addRow(x, y);
+        for(let r=0; r<rows.length; r++){
+          const row = rows[r];
+          const x = parseFloat(row[colX]);
+          const y = parseFloat(row[colY]);
+          if(Number.isFinite(x) && Number.isFinite(y)){
+            addRow(x, y);
+          }
         }
         tableToTextarea();
       };
@@ -412,7 +441,7 @@
     }
 
     // -------------------------
-    // Parsing with optional order preservation
+    // Parsing
     // -------------------------
     function parseRawFromTextarea(keepOrder=false){
       const input = document.getElementById('uniaxialInput').value || '';
@@ -438,13 +467,11 @@
       const binInput = document.getElementById('groupThresh2');
       const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
 
-      // Auto-zero (subtract first point)
       if(zeroBox && zeroBox.checked && out.length>0){
         const ox = out[0].x, oy = out[0].y;
         out = out.map(p=>({x:p.x-ox, y:p.y-oy}));
       }
 
-      // Convert TRUE stress (Cauchy) to NOMINAL stress if requested: P = sigma / lambda
       if(stressIsTrue){
         out = out.map(p=>{
           const L = 1 + p.x;
@@ -475,13 +502,9 @@
 
       const raw = parseRawFromTextarea(keepOrder);
       const allowBinning = !keepOrder;
-      const useProcessed = !!(document.getElementById('doZero2')?.checked);
 
-      if(useProcessed) return applyPreprocessing(raw, allowBinning);
-      // even if not auto-zero, still allow true->nominal conversion
-      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
-      if(stressIsTrue) return applyPreprocessing(raw, allowBinning);
-      return raw;
+      // Always apply preprocessing (zero and/or true->nominal if selected)
+      return applyPreprocessing(raw, allowBinning);
     }
 
     function renderIngestDebug(rawPts, cleanedPts){
@@ -502,7 +525,8 @@
       const s1 = stats(cleanedPts);
 
       const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
-      const keepOrder = !!(document.getElementById('enableMullins')?.checked) || (MODELS[document.getElementById('modelSelect')?.value]?.pathDependent === true);
+      const modelKey = document.getElementById('modelSelect')?.value;
+      const keepOrder = !!(document.getElementById('enableMullins')?.checked) || (MODELS[modelKey]?.pathDependent === true);
 
       div.innerHTML =
         `RAW: n=${s0.n}  ε[min,max]=[${s0.xmin.toExponential(3)}, ${s0.xmax.toExponential(3)}]  ` +
@@ -512,7 +536,35 @@
         `Flags: keepOrder=${keepOrder}  binning=${!keepOrder}  true→nominal=${!!stressIsTrue}`;
     }
 
+    function renderPreChart(datasets){
+      const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
+      if(preChart) preChart.destroy();
+      preChart = new Chart(ctx, {
+        type:'scatter',
+        data:{
+          datasets: datasets.map(d=>({
+            label: d.label,
+            data: d.data,
+            borderColor: d.color,
+            backgroundColor: d.color,
+            pointRadius: d.pointRadius ?? 3,
+            showLine: false
+          }))
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, animation:false,
+          scales:{
+            x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+            y:{ title:{display:true, text:'Stress (input or nominal)'} }
+          }
+        }
+      });
+    }
+
     function processAndRender(){
+      // ensure table edits are captured
+      tableToTextarea();
+
       const modelKey = document.getElementById('modelSelect')?.value;
       const mullinsOn = document.getElementById('enableMullins')?.checked;
       const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
@@ -534,19 +586,6 @@
         {label:'Raw', data:rawData, color:'#CBD5E1'},
         {label:'Cleaned', data:cleanData, color:'#3B82F6', pointRadius:5}
       ]);
-    }
-
-    function renderPreChart(datasets){
-      const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
-      if(preChart) preChart.destroy();
-      preChart = new Chart(ctx, {
-        type:'scatter',
-        data:{ datasets: datasets.map(d=>({...d, borderColor:d.color, backgroundColor:d.color, showLine:false, borderWidth:2, pointRadius:d.pointRadius??3})) },
-        options:{ responsive:true, maintainAspectRatio:false,
-          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
-                  y:{ title:{display:true, text:'Stress (input or nominal)'} } }
-        }
-      });
     }
 
     // -------------------------
@@ -597,7 +636,7 @@
     }
 
     // -------------------------
-    // Closed-form W0(λ) for hyperelastic models
+    // Invariants & energies (for Mullins W0)
     // -------------------------
     function uniaxialInvariants(lambda){
       const l1 = lambda;
@@ -630,20 +669,18 @@
       }
       return W;
     }
-    function W0_arruda_fromYourStressPoly(lambda, mu, lm){
+    function W0_arruda(lambda, mu, lm){
       const { I1 } = uniaxialInvariants(lambda);
       const c1 = 1/(5*lm*lm);
       const c2 = 11/(175*Math.pow(lm,4));
       const c3 = 19/(675*Math.pow(lm,6));
       const c4 = 519/(67375*Math.pow(lm,8));
-
       const term =
         (I1 - 3) +
-        c1 * ( (I1*I1 - 9) / 2 ) +
-        c2 * ( (Math.pow(I1,3) - 27) / 3 ) +
-        c3 * ( (Math.pow(I1,4) - 81) / 4 ) +
-        c4 * ( (Math.pow(I1,5) - 243) / 5 );
-
+        c1 * ((I1*I1 - 9) / 2) +
+        c2 * ((Math.pow(I1,3) - 27) / 3) +
+        c3 * ((Math.pow(I1,4) - 81) / 4) +
+        c4 * ((Math.pow(I1,5) - 243) / 5);
       return 0.5 * mu * term;
     }
     function W0_exttube(lambda, Gc, delta, Ge, beta){
@@ -658,14 +695,14 @@
         case 'mooney3': return W0_mooney3(lambda, params[0], params[1], params[2]);
         case 'ogden2':  return W0_ogden(lambda, [params[0], params[2]], [params[1], params[3]]);
         case 'ogden3':  return W0_ogden(lambda, [params[0], params[2], params[4]], [params[1], params[3], params[5]]);
-        case 'arruda':  return W0_arruda_fromYourStressPoly(lambda, params[0], params[1]);
+        case 'arruda':  return W0_arruda(lambda, params[0], params[1]);
         case 'exttube': return W0_exttube(lambda, params[0], params[1], params[2], params[3]);
         default:        return null;
       }
     }
 
     // -------------------------
-    // Mullins (Ogden–Roxburgh-like) + Debug
+    // Mullins (Ogden–Roxburgh-like)
     // -------------------------
     function mullinsParams(){
       const r = parseFloat(document.getElementById('mullins_r')?.value ?? '1.5');
@@ -676,6 +713,7 @@
 
     function erfSafe(x){
       if (window.math && typeof math.erf === 'function') return math.erf(x);
+      // approximation
       const sign = x < 0 ? -1 : 1;
       x = Math.abs(x);
       const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
@@ -692,15 +730,9 @@
       return clamp01(eta);
     }
 
-    // Returns { stress: [...], debug: { softenedCount, Wm, etaMin, etaMax } }
     function applyMullinsToStressSeries(modelKey, strainPts, stressVirgin, params){
       const { r, m, beta } = mullinsParams();
-
       let Wm = -Infinity;
-      let etaMin = 1.0;
-      let etaMax = 1.0;
-      let softenedCount = 0;
-
       const out = new Array(stressVirgin.length);
 
       for(let i=0;i<strainPts.length;i++){
@@ -711,61 +743,19 @@
           out[i] = stressVirgin[i];
           continue;
         }
-
         if(W0 > Wm) Wm = W0;
 
         let eta = 1.0;
         if(W0 < Wm - 1e-12){
-          softenedCount++;
           eta = mullinsEta(W0, Wm, r, m, beta);
-        } else {
-          eta = 1.0;
         }
-
-        etaMin = Math.min(etaMin, eta);
-        etaMax = Math.max(etaMax, eta);
-
         out[i] = eta * stressVirgin[i];
       }
-
-      if(!Number.isFinite(Wm)) Wm = 0;
-
-      return {
-        stress: out,
-        debug: { softenedCount, Wm, etaMin, etaMax }
-      };
-    }
-
-    function updateMullinsDebugPanel(debug){
-      const panel = document.getElementById('mullinsDebug');
-      const badge = document.getElementById('mullinsActiveBadge');
-      const softEl = document.getElementById('dbgSoftCount');
-      const wmEl = document.getElementById('dbgWm');
-      const etaEl = document.getElementById('dbgEta');
-
-      panel.classList.remove('hidden');
-
-      softEl.textContent = String(debug.softenedCount ?? 0);
-      wmEl.textContent = (debug.Wm ?? 0).toExponential(4);
-      etaEl.textContent = `${(debug.etaMin ?? 1).toFixed(6)} / ${(debug.etaMax ?? 1).toFixed(6)}`;
-
-      const active = (debug.softenedCount ?? 0) > 0 && (debug.etaMin ?? 1) < 0.999999;
-      if(active){
-        badge.textContent = "ACTIVE";
-        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full border border-emerald-400 bg-emerald-50 text-emerald-700";
-      } else {
-        badge.textContent = "INACTIVE";
-        badge.className = "text-[10px] font-bold px-2 py-1 rounded-full border border-slate-300 bg-slate-50 text-slate-600";
-      }
-    }
-
-    function hideMullinsDebugPanel(){
-      const panel = document.getElementById('mullinsDebug');
-      panel.classList.add('hidden');
+      return { stress: out };
     }
 
     // -------------------------
-    // Bergstrom–Boyce (BB) practical uniaxial implementation
+    // BB helper
     // -------------------------
     function invLangevinPade(x){
       const ax = Math.abs(x);
@@ -776,24 +766,19 @@
       const denom = (s - x);
       return 1 / (denom === 0 ? 1e-12 : denom);
     }
-
     function jChainUniax(lambda){
       return Math.sqrt((lambda*lambda + 2.0/lambda)/3.0);
     }
-
     function chainNominalStress_AB_like(lambda, mu, jlock){
       lambda = Math.max(1e-8, lambda);
       mu = Math.max(0, mu);
       jlock = Math.max(1.01, jlock);
-
       const j = jChainUniax(lambda);
       const x = Math.min(0.999999, j / jlock);
       const invL = invLangevinPade(x);
-
       const base = (lambda - Math.pow(lambda, -2));
       return (mu/3.0) * (base / Math.max(1e-12, j)) * invL;
     }
-
     function bbPredictSeries(strainPts, params){
       const muA = Math.max(0, params[0]);
       const jA  = Math.max(1.01, params[1]);
@@ -892,9 +877,15 @@
         params: ['mu','lambda_m'],
         initial: [0.5, 5.0],
         pathDependent: false,
+        // Engineering/nominal stress form (MCalibration-style input assumption)
         solve: (L, [mu, lm]) => {
           const I1 = L*L + 2/L;
-          const poly = 1 + (1/lm**2)*(I1/5) + (11/lm**4)*(I1**2/175) + (19/lm**6)*(I1**3/675) + (519/lm**8)*(I1**4/67375);
+          const x2 = I1 / (3*lm*lm);
+          const poly =
+            1 +
+            x2/10 +
+            11*Math.pow(x2,2)/525 +
+            19*Math.pow(x2,3)/3500;
           return mu * (L - 1/(L*L)) * poly;
         }
       },
@@ -920,8 +911,7 @@
       const mullinsOn = document.getElementById('enableMullins')?.checked;
 
       if(model.pathDependent){
-        hideMullinsDebugPanel();
-        return { stress: model.predictSeries(cleanData, params), debug: null, usedMullins: false };
+        return { stress: model.predictSeries(cleanData, params) };
       }
 
       const sig0 = cleanData.map(p => model.solve(1+p.x, params));
@@ -930,17 +920,14 @@
         const testW = virginEnergyW0(modelKey, Math.max(1e-12, 1+cleanData[0].x), params);
         if(testW !== null){
           const out = applyMullinsToStressSeries(modelKey, cleanData, sig0, params);
-          updateMullinsDebugPanel(out.debug);
-          return { stress: out.stress, debug: out.debug, usedMullins: true };
+          return { stress: out.stress };
         }
       }
-
-      hideMullinsDebugPanel();
-      return { stress: sig0, debug: null, usedMullins: false };
+      return { stress: sig0 };
     }
 
     // -------------------------
-    // Closed-form least squares for neo/mooney2/mooney3 (robust)
+    // Closed-form LS for neo/mooney2/mooney3
     // -------------------------
     function fitLinearHyperelastic(modelKey, pts){
       const n = pts.length;
@@ -952,9 +939,8 @@
       const b = [];
 
       for(const p of pts){
-        const e = p.x;
         const y = p.y;
-        const L = Math.max(1e-12, 1 + e);
+        const L = Math.max(1e-12, 1 + p.x);
         const basis = (L - Math.pow(L, -2));
         const f1 = 2*basis;
 
@@ -976,14 +962,11 @@
         const r = rows[i];
         for(let a=0;a<m;a++){
           ATb[a] += r[a]*b[i];
-          for(let c=0;c<m;c++){
-            ATA[a][c] += r[a]*r[c];
-          }
+          for(let c=0;c<m;c++) ATA[a][c] += r[a]*r[c];
         }
       }
       for(let a=0;a<m;a++) ATA[a][a] += ridge;
 
-      // Gaussian elimination
       const M = ATA.map((row,i)=>row.concat([ATb[i]]));
       for(let k=0;k<m;k++){
         let piv = k;
@@ -999,96 +982,436 @@
           for(let j=k;j<m+1;j++) M[i][j] -= f*M[k][j];
         }
       }
-      const p = M.map(r=>r[m]);
-
-      if(modelKey === 'neo') return [p[0]];
-      if(modelKey === 'mooney2') return [p[0], p[1]];
-      if(modelKey === 'mooney3') return [p[0], p[1], p[2]];
+      const psol = M.map(r=>r[m]);
+      if(modelKey === 'neo') return [psol[0]];
+      if(modelKey === 'mooney2') return [psol[0], psol[1]];
+      if(modelKey === 'mooney3') return [psol[0], psol[1], psol[2]];
       return null;
     }
 
     // -------------------------
-    // Optimization (NaN/Inf safe)
+    // Constraints
     // -------------------------
-    async function runOptimization(){
-      tableToTextarea();
-      cleanData = getOptimizationData();
-      if(cleanData.length < 3) return;
-
-      document.getElementById('statusIndicator').classList.remove('hidden');
-
-      const modelKey = document.getElementById('modelSelect').value;
+    function enforceConstraints(modelKey, params){
       const model = MODELS[modelKey];
+      const out = [...params];
 
-      // If linear-in-params model (neo/mooney2/mooney3), do closed-form LS
-      const closed = fitLinearHyperelastic(modelKey, cleanData);
-      if(closed){
-        const err = calculateError(modelKey, closed);
-        renderResults(modelKey, closed, err);
-        document.getElementById('statusIndicator').classList.add('hidden');
-        return;
-      }
-
-      let bestParams = [...model.initial];
-      let bestError = calculateError(modelKey, bestParams);
-      if(!Number.isFinite(bestError)) bestError = Number.POSITIVE_INFINITY;
-
-      let step = 0.1;
-      const iters = (modelKey === 'bb') ? 450 : 900;
-
-      for(let iter=0; iter<iters; iter++){
-        let improved=false;
-
-        for(let i=0;i<bestParams.length;i++){
-          for(let dir of [-1,1]){
-            let next=[...bestParams];
-            next[i]+=step*dir;
-
-            if(modelKey==='exttube'){
-              if(model.params[i]==='beta') next[i]=clamp(next[i], 1e-6, 1.0);
-              if(model.params[i]==='delta') next[i]=Math.max(0, next[i]);
-              if(model.params[i]==='Gc' || model.params[i]==='Ge') next[i]=Math.max(0, next[i]);
-            }
-            if(modelKey==='bb'){
-              if(model.params[i].includes('mu')) next[i]=Math.max(0, next[i]);
-              if(model.params[i].includes('lock')) next[i]=Math.max(1.01, next[i]);
-              if(model.params[i]==='gamma0') next[i]=Math.max(0, next[i]);
-              if(model.params[i]==='m') next[i]=Math.max(0, next[i]);
-            }
-
-            const e = calculateError(modelKey, next);
-            if(!Number.isFinite(e)) continue;
-
-            if(e < bestError){
-              bestError = e;
-              bestParams = next;
-              improved = true;
-            }
-          }
+      if(modelKey==='exttube'){
+        for(let i=0;i<out.length;i++){
+          const name = model.params[i];
+          if(name==='beta') out[i]=clamp(out[i], 1e-6, 1.0);
+          if(name==='delta') out[i]=Math.max(0, out[i]);
+          if(name==='Gc' || name==='Ge') out[i]=Math.max(0, out[i]);
         }
-        if(!improved) step *= 0.5;
-        if(step < 1e-6) break;
       }
-
-      renderResults(modelKey, bestParams, bestError);
-      document.getElementById('statusIndicator').classList.add('hidden');
+      if(modelKey==='bb'){
+        for(let i=0;i<out.length;i++){
+          const name = model.params[i];
+          if(name.includes('mu')) out[i]=Math.max(0, out[i]);
+          if(name.includes('lock')) out[i]=Math.max(1.01, out[i]);
+          if(name==='gamma0') out[i]=Math.max(0, out[i]);
+          if(name==='m') out[i]=Math.max(0, out[i]);
+        }
+      }
+      if(modelKey==='arruda'){
+        // keep lambda_m > 1
+        out[1] = Math.max(1.05, out[1]);
+        out[0] = Math.max(0, out[0]);
+      }
+      return out;
     }
 
+    // -------------------------
+    // Objective (MCalibration-style + alternatives)
+    // -------------------------
     function calculateError(modelKey, params){
       const predObj = predictStressSeries(modelKey, params);
       const preds = predObj.stress;
-
       if(!preds || preds.length !== cleanData.length) return Number.POSITIVE_INFINITY;
 
+      const mode = document.getElementById('errorWeightSelect')?.value || 'mcal';
+      const yAbsMax = Math.max(1e-12, ...cleanData.map(p => Math.abs(p.y)));
+      const eMax = Math.max(1e-12, ...cleanData.map(p => p.x));
+      const floor = 1e-9 * yAbsMax;
+
       let sum = 0;
+      let wsum = 0;
+
       for(let i=0;i<cleanData.length;i++){
-        const yi = cleanData[i].y;
-        const pi = preds[i];
-        if(!Number.isFinite(pi) || !Number.isFinite(yi)) return Number.POSITIVE_INFINITY;
-        const r = pi - yi;
-        sum += r*r;
+        const e = cleanData[i].x;
+        const y = cleanData[i].y;
+        const p = preds[i];
+        if(!Number.isFinite(p) || !Number.isFinite(y)) return Number.POSITIVE_INFINITY;
+
+        let w = 1.0;
+
+        if(mode === 'uniform'){
+          w = 1.0;
+          const r = p - y;
+          sum += w * r*r;
+          wsum += w;
+        }
+        else if(mode === 'highstrain'){
+          w = 1.0 + 4.0 * (i/Math.max(1, cleanData.length-1));
+          const r = p - y;
+          sum += w * r*r;
+          wsum += w;
+        }
+        else if(mode === 'normalized'){
+          // relative weighting
+          const denom = Math.max(floor, Math.abs(y));
+          const r = (p - y)/denom;
+          sum += r*r;
+          wsum += 1.0;
+        }
+        else if(mode === 'log'){
+          const yp = Math.max(floor, Math.abs(y));
+          const pp = Math.max(floor, Math.abs(p));
+          const r = Math.log(pp) - Math.log(yp);
+          sum += r*r;
+          wsum += 1.0;
+        }
+        else {
+          // ✅ MCalibration-style (low strain dominant)
+          // Blend: strong low-strain + baseline tail influence
+          w = 0.70 * Math.exp(-3.0 * (e/Math.max(1e-12, eMax))) + 0.30;
+
+          const r = p - y;
+          sum += w * r*r;
+          wsum += w;
+        }
       }
-      return sum;
+
+      return sum / Math.max(1e-12, wsum);
+    }
+
+    // -------------------------
+    // Curves for chart
+    // -------------------------
+    function buildCurveForParams(modelKey, params){
+      const model = MODELS[modelKey];
+      const mullinsOn = document.getElementById('enableMullins')?.checked;
+      const maxE = Math.max(...cleanData.map(p=>p.x));
+
+      const predObj = predictStressSeries(modelKey, params);
+      const preds = predObj.stress;
+
+      if(mullinsOn || model.pathDependent){
+        return cleanData.map((p,i)=>({x:p.x, y:preds[i]}));
+      }
+
+      const curve = [];
+      const end = maxE*1.1;
+      const steps = 90;
+      for(let k=0;k<=steps;k++){
+        const e = end * (k/steps);
+        curve.push({x:e, y:model.solve(1+e, params)});
+      }
+      return curve;
+    }
+
+    function ensureValidationChart(){
+      const ctx = document.getElementById('valChart')?.getContext('2d');
+      if(!ctx) return;
+      if(chart) return;
+
+      chart = new Chart(ctx, {
+        type:'scatter',
+        data:{ datasets:[
+          {label:'Experiment (cleaned)', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5, showLine:false},
+          {label:'Best-so-far', data:[], borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3},
+          {label:'Current candidate', data:[], borderColor:'#10b981', showLine:true, pointRadius:0, borderWidth:2, borderDash:[6,4]}
+        ]},
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          animation:false,
+          parsing:false,
+          scales:{
+            x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+            y:{ title:{display:true, text:'Stress (nominal used for fit)'} }
+          }
+        }
+      });
+    }
+
+    function updateLiveCurves(modelKey, bestParams, currentParams, iterLabel, bestErr, currentErr){
+      const live = document.getElementById('liveUpdate')?.checked;
+      if(!live) return;
+
+      ensureValidationChart();
+      if(!chart) return;
+
+      const status = document.getElementById('liveStatus');
+      if(status){
+        status.textContent =
+          `${iterLabel} | Best: ${Number.isFinite(bestErr) ? bestErr.toExponential(3) : bestErr} | ` +
+          `Current: ${Number.isFinite(currentErr) ? currentErr.toExponential(3) : currentErr}`;
+      }
+
+      chart.data.datasets[0].data = cleanData;
+      chart.data.datasets[1].data = buildCurveForParams(modelKey, bestParams);
+      chart.data.datasets[2].data = buildCurveForParams(modelKey, currentParams);
+      chart.update('none');
+    }
+
+    // -------------------------
+    // Optimizers
+    // -------------------------
+    // Pattern search replaced with a true "evolution" random-walk around best (MCalibration-like behaviour)
+    async function optimizePattern(modelKey, startParams){
+      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+
+      let bestParams = enforceConstraints(modelKey, [...startParams]);
+      let bestErr = calculateError(modelKey, bestParams);
+
+      let currentParams = [...bestParams];
+      let currentErr = bestErr;
+
+      let step = 0.15;
+      const iters = (modelKey === 'bb') ? 600 : 1400;
+
+      for(let iter=0; iter<iters; iter++){
+        if(stopFlag) break;
+
+        // propose trial around BEST
+        let trial = bestParams.map(v => v + (Math.abs(v)+1) * step * randn());
+        trial = enforceConstraints(modelKey, trial);
+
+        const trialErr = calculateError(modelKey, trial);
+
+        currentParams = trial;
+        currentErr = trialErr;
+
+        // accept if improved (best)
+        if(trialErr < bestErr){
+          bestErr = trialErr;
+          bestParams = trial;
+          step *= 1.03; // mild expansion on improvement
+        } else {
+          step *= 0.997; // slow contraction otherwise
+        }
+
+        if(iter % liveEvery === 0){
+          updateLiveCurves(modelKey, bestParams, currentParams, `Pattern iter ${iter}`, bestErr, currentErr);
+          await yieldToUI();
+        }
+
+        if(step < 1e-7) break;
+      }
+
+      return { params: bestParams, err: bestErr };
+    }
+
+    async function optimizeNelderMead(modelKey, startParams, maxIter=260){
+      const n = startParams.length;
+      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+      const alpha=1, gamma=2, rho=0.5, sigma=0.5;
+
+      const simplex = [];
+      simplex.push(enforceConstraints(modelKey, startParams));
+      for(let i=0;i<n;i++){
+        const p = [...startParams];
+        p[i] += (Math.abs(p[i])+1)*0.1;
+        simplex.push(enforceConstraints(modelKey, p));
+      }
+
+      const f = (p)=>calculateError(modelKey, p);
+      let vals = simplex.map(p => f(p));
+
+      for(let it=0; it<maxIter; it++){
+        if(stopFlag) break;
+
+        const idx = [...Array(n+1).keys()].sort((a,b)=>vals[a]-vals[b]);
+        const best = simplex[idx[0]];
+        const worst = simplex[idx[n]];
+        const fbest = vals[idx[0]];
+        const fworst = vals[idx[n]];
+        const f2 = vals[idx[n-1]];
+
+        const centroid = Array(n).fill(0);
+        for(let k=0;k<n;k++){
+          for(let i=0;i<n;i++) centroid[k] += simplex[idx[i]][k];
+          centroid[k] /= n;
+        }
+
+        let xr = centroid.map((c,k)=> c + alpha*(c - worst[k]));
+        xr = enforceConstraints(modelKey, xr);
+        const fr = f(xr);
+
+        if(it % liveEvery === 0){
+          updateLiveCurves(modelKey, best, xr, `NM iter ${it}`, fbest, fr);
+          await yieldToUI();
+        }
+
+        if(fr < fbest){
+          let xe = centroid.map((c,k)=> c + gamma*(xr[k]-c));
+          xe = enforceConstraints(modelKey, xe);
+          const fe = f(xe);
+
+          if(fe < fr){ simplex[idx[n]] = xe; vals[idx[n]] = fe; }
+          else { simplex[idx[n]] = xr; vals[idx[n]] = fr; }
+        } else if(fr < f2){
+          simplex[idx[n]] = xr; vals[idx[n]] = fr;
+        } else {
+          let xc;
+          if(fr < fworst) xc = centroid.map((c,k)=> c + rho*(xr[k]-c));
+          else xc = centroid.map((c,k)=> c - rho*(c - worst[k]));
+          xc = enforceConstraints(modelKey, xc);
+          const fc = f(xc);
+
+          if(fc < fworst){
+            simplex[idx[n]] = xc; vals[idx[n]] = fc;
+          } else {
+            for(let i=1;i<n+1;i++){
+              const pi = simplex[idx[i]].map((x,k)=> best[k] + sigma*(x - best[k]));
+              simplex[idx[i]] = enforceConstraints(modelKey, pi);
+              vals[idx[i]] = f(simplex[idx[i]]);
+            }
+          }
+        }
+
+        const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+        const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length);
+        if(sd < 1e-10) break;
+      }
+
+      let bestI = 0;
+      for(let i=1;i<vals.length;i++) if(vals[i] < vals[bestI]) bestI = i;
+      return { params: simplex[bestI], err: vals[bestI] };
+    }
+
+    async function optimizeDE(modelKey, baseInit, generations=140){
+      const dim = baseInit.length;
+      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+
+      const NP = Math.max(30, 12*dim);
+      const F = 0.8;
+      const CR = 0.9;
+
+      let pop = Array.from({length:NP}, () => enforceConstraints(modelKey, jitterAround(baseInit, 0.8)));
+      let fit = pop.map(p => calculateError(modelKey, p));
+
+      let bestI = 0;
+      for(let i=1;i<NP;i++) if(fit[i] < fit[bestI]) bestI = i;
+      let bestParams = pop[bestI];
+      let bestErr = fit[bestI];
+
+      for(let g=0; g<generations; g++){
+        if(stopFlag) break;
+
+        for(let i=0;i<NP;i++){
+          if(stopFlag) break;
+
+          let r1,r2,r3;
+          do{ r1 = Math.floor(Math.random()*NP); }while(r1===i);
+          do{ r2 = Math.floor(Math.random()*NP); }while(r2===i || r2===r1);
+          do{ r3 = Math.floor(Math.random()*NP); }while(r3===i || r3===r1 || r3===r2);
+
+          const xi = pop[i], a = pop[r1], b = pop[r2], c = pop[r3];
+          const v = a.map((av,k)=> av + F*(b[k]-c[k]));
+
+          const jRand = Math.floor(Math.random()*dim);
+          let u = xi.map((xk,k)=>(Math.random() < CR || k===jRand) ? v[k] : xk);
+
+          u = enforceConstraints(modelKey, u);
+          const fu = calculateError(modelKey, u);
+
+          if(g % liveEvery === 0 && i === 0){
+            updateLiveCurves(modelKey, bestParams, u, `DE gen ${g}`, bestErr, fu);
+            await yieldToUI();
+          }
+
+          if(fu < fit[i]){
+            pop[i] = u;
+            fit[i] = fu;
+            if(fu < bestErr){
+              bestErr = fu;
+              bestParams = u;
+            }
+          }
+        }
+      }
+
+      return { params: bestParams, err: bestErr };
+    }
+
+    async function optimizeGA(modelKey, baseInit, generations=180){
+      const dim = baseInit.length;
+      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+
+      const popSize = Math.max(40, 14*dim);
+      const elite = Math.max(2, Math.floor(popSize*0.10));
+      const mutRate = 0.20;
+      const mutSigma = 0.15;
+
+      let pop = Array.from({length:popSize}, ()=> enforceConstraints(modelKey, jitterAround(baseInit, 1.0)));
+
+      function fitness(p){
+        const e = calculateError(modelKey, p);
+        if(!Number.isFinite(e)) return 0;
+        return 1.0/(1e-12 + e);
+      }
+
+      let bestParams = pop[0];
+      let bestErr = calculateError(modelKey, bestParams);
+
+      for(let g=0; g<generations; g++){
+        if(stopFlag) break;
+
+        const scored = pop.map(p => ({p, f: fitness(p), e: calculateError(modelKey, p)}))
+                          .sort((a,b)=> b.f - a.f);
+
+        if(scored[0].e < bestErr){
+          bestErr = scored[0].e;
+          bestParams = scored[0].p;
+        }
+
+        const next = [];
+        for(let i=0;i<elite;i++) next.push(scored[i].p);
+
+        const sumF = scored.reduce((a,b)=>a+b.f,0) || 1;
+        function pick(){
+          let r = Math.random()*sumF;
+          for(const s of scored){ r -= s.f; if(r <= 0) return s.p; }
+          return scored[0].p;
+        }
+
+        let currentChild = bestParams;
+        let currentErr = bestErr;
+
+        while(next.length < popSize){
+          if(stopFlag) break;
+
+          const p1 = pick();
+          const p2 = pick();
+          const t = Math.random();
+          let child = p1.map((x,k)=> t*x + (1-t)*p2[k]);
+
+          if(Math.random() < mutRate){
+            child = child.map((x)=> x + (Math.abs(x)+1)*mutSigma*randn());
+          }
+
+          child = enforceConstraints(modelKey, child);
+          next.push(child);
+
+          currentChild = child;
+          currentErr = calculateError(modelKey, child);
+
+          if(g % liveEvery === 0 && next.length === elite + 1){
+            updateLiveCurves(modelKey, bestParams, currentChild, `GA gen ${g}`, bestErr, currentErr);
+            await yieldToUI();
+          }
+        }
+
+        pop = next;
+
+        if(g % liveEvery === 0){
+          updateLiveCurves(modelKey, bestParams, bestParams, `GA gen ${g}`, bestErr, bestErr);
+          await yieldToUI();
+        }
+      }
+
+      return { params: bestParams, err: bestErr };
     }
 
     // -------------------------
@@ -1100,9 +1423,8 @@
       const card = document.getElementById('resultsCard');
       const snippet = document.getElementById('abaqusSnippet');
 
-      if(!model.pathDependent) lastHyperFit = { key, params: [...params] };
-
       card.classList.remove('hidden');
+
       container.innerHTML = params.map((p,i)=>
         `<div class="flex justify-between border-b border-slate-50 pb-1">
            <span class="text-slate-400">${model.params[i]}</span>
@@ -1110,185 +1432,105 @@
          </div>`
       ).join('');
 
+      // pseudo R2 (informational)
       const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
       const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY,2),0);
       const r2 = (ssTot > 0 && Number.isFinite(err)) ? (1 - (err/ssTot)) : 0;
       document.getElementById('r2Val').innerText = r2.toFixed(5);
 
-      const predObj = predictStressSeries(key, params);
-      const preds = predObj.stress;
-
-      const mullinsOn = document.getElementById('enableMullins')?.checked;
-      const maxE = Math.max(...cleanData.map(p=>p.x));
-      let curve = [];
-
-      if(mullinsOn || model.pathDependent){
-        curve = cleanData.map((p,i)=>({x:p.x, y:preds[i]}));
-      } else {
-        for(let e=0; e<=maxE*1.1; e+= (maxE*1.1)/60){
-          curve.push({x:e, y:model.solve(1+e, params)});
-        }
-      }
-
-      const ctx = document.getElementById('valChart').getContext('2d');
-      if(chart) chart.destroy();
-      chart = new Chart(ctx, {
-        type:'scatter',
-        data:{ datasets:[
-          {label:'Experiment (cleaned)', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5, showLine:false},
-          {label:'Model Fit', data:curve, borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3}
-        ]},
-        options:{ responsive:true, maintainAspectRatio:false,
-          scales:{ x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
-                  y:{ title:{display:true, text:'Stress (nominal used for fit)'} } }
-        }
-      });
-
-      const mull = document.getElementById('enableMullins')?.checked ? mullinsParams() : null;
-
       if(key === 'bb'){
         snippet.innerHTML =
           `<pre># Bergstrom-Boyce (uniaxial, rate-dependent)
-muA=${params[0].toFixed(6)}, jA_lock=${params[1].toFixed(6)}
-muB=${params[2].toFixed(6)}, jB_lock=${params[3].toFixed(6)}
-gamma0=${params[4].toFixed(6)}, C=${params[5].toFixed(6)}, m=${params[6].toFixed(6)}
+${model.params.map((n,i)=>`${n}=${params[i].toFixed(6)}`).join(', ')}
 bbRate=${parseFloat(document.getElementById('bbRate').value)}, bbSubsteps=${parseInt(document.getElementById('bbSubsteps').value,10)}
-# Note: Mullins toggle is not applied to BB in this web tool.
 </pre>`;
       } else {
         snippet.innerHTML =
           `<pre># Hyperelastic (${key}) parameters
 ${model.params.map((n,i)=>`${n}=${params[i].toFixed(6)}`).join(', ')}
-${mull ? `# Mullins (PSE2-like): r=${mull.r}, m=${mull.m}, beta=${mull.beta}` : ``}
 </pre>`;
       }
+
+      updateLiveCurves(key, params, params, "Final", err, err);
     }
 
     // -------------------------
-    // Mullins-only fitting (unloading/reloading points only)
+    // Main controller
     // -------------------------
-    function getSoftenedIndices(modelKey, dataPts, hyperParams){
-      let Wm = -Infinity;
-      const idx = [];
-      for(let i=0;i<dataPts.length;i++){
-        const lambda = Math.max(1e-12, 1 + dataPts[i].x);
-        const W0 = virginEnergyW0(modelKey, lambda, hyperParams);
-        if(W0 === null || !Number.isFinite(W0)) continue;
-        if(W0 < Wm - 1e-12) idx.push(i);
-        Wm = Math.max(Wm, W0);
-      }
-      return idx;
-    }
+    async function runOptimization(){
+      stopFlag = false;
+      document.getElementById('stopBtn').classList.remove('hidden');
 
-    function mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, r, m, beta){
-      if(!(r > 0 && m > 0)) return Number.POSITIVE_INFINITY;
+      // Always sync current table edits
+      tableToTextarea();
 
-      let Wm = -Infinity;
-      const softSet = new Set(softIdx);
-      let sse = 0;
-      let used = 0;
-
-      for(let i=0;i<dataPts.length;i++){
-        const lambda = Math.max(1e-12, 1 + dataPts[i].x);
-        const W0 = virginEnergyW0(modelKey, lambda, hyperParams);
-        if(W0 === null || !Number.isFinite(W0)) continue;
-
-        Wm = Math.max(Wm, W0);
-
-        if(!softSet.has(i)) continue;
-
-        if((m + beta*Wm) <= 1e-12) return Number.POSITIVE_INFINITY;
-
-        const eta = mullinsEta(W0, Wm, r, m, beta);
-        const pred = eta * sig0[i];
-        const res = pred - dataPts[i].y;
-        sse += res*res;
-        used++;
+      // Build cleanData from pipeline
+      cleanData = getOptimizationData();
+      if(cleanData.length < 3){
+        document.getElementById('stopBtn').classList.add('hidden');
+        return;
       }
 
-      return (used >= 3) ? sse : Number.POSITIVE_INFINITY;
-    }
+      ensureValidationChart();
+      document.getElementById('statusIndicator').classList.remove('hidden');
+      document.getElementById('liveStatus').textContent = "Starting...";
 
-    function fitMullinsOnly(){
       const modelKey = document.getElementById('modelSelect').value;
       const model = MODELS[modelKey];
 
-      if(model.pathDependent){
-        alert("Mullins-only fitting is intended for hyperelastic models (not BB).");
-        return;
-      }
-      if(!lastHyperFit || lastHyperFit.key !== modelKey){
-        alert("Run RECALIBRATE FIT first (with Mullins OFF) for the selected hyperelastic model, then press FIT MULLINS.");
-        return;
-      }
-
-      const dataPts = cleanData;
-      const hyperParams = [...lastHyperFit.params];
-
-      const sig0 = dataPts.map(p => model.solve(1+p.x, hyperParams));
-
-      const softIdx = getSoftenedIndices(modelKey, dataPts, hyperParams);
-      if(softIdx.length < 3){
-        alert("No unloading/reloading softened points detected.\nPaste cyclic data (load-unload-reload) and ensure order is preserved.");
+      // closed-form for linear models (fast)
+      const closed = fitLinearHyperelastic(modelKey, cleanData);
+      if(closed){
+        const err = calculateError(modelKey, closed);
+        renderResults(modelKey, closed, err);
+        document.getElementById('statusIndicator').classList.add('hidden');
+        document.getElementById('stopBtn').classList.add('hidden');
         return;
       }
 
-      let r0 = Math.max(1e-6, parseFloat(document.getElementById('mullins_r').value || '1.5'));
-      let m0 = Math.max(1e-6, parseFloat(document.getElementById('mullins_m').value || '1000000'));
-      let b0 = parseFloat(document.getElementById('mullins_beta').value || '0.2');
+      let init = enforceConstraints(modelKey, [...model.initial]);
+      let initErr = calculateError(modelKey, init);
+      updateLiveCurves(modelKey, init, init, "Init", initErr, initErr);
+      await yieldToUI();
 
-      let v = [Math.log(r0), Math.log(m0), b0];
-      let step = [0.35, 0.90, 0.05];
+      const opt = document.getElementById('optimizerSelect')?.value || 'pattern';
+      let result = null;
 
-      let best = { r: Math.exp(v[0]), m: Math.exp(v[1]), beta: v[2] };
-      let bestE = mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, best.r, best.m, best.beta);
-
-      for(let it=0; it<250; it++){
-        let improved = false;
-
-        for(let k=0; k<3; k++){
-          for(const sgn of [-1, +1]){
-            const vt = [...v];
-            vt[k] += sgn * step[k];
-
-            const cand = {
-              r: Math.exp(vt[0]),
-              m: Math.exp(vt[1]),
-              beta: clamp(vt[2], -1.0, 5.0)
-            };
-
-            const e = mullinsSSE_unloadingOnly(modelKey, dataPts, sig0, hyperParams, softIdx, cand.r, cand.m, cand.beta);
-            if(e < bestE){
-              bestE = e;
-              best = cand;
-              v = vt;
-              improved = true;
-            }
-          }
+      if(opt === 'pattern'){
+        result = await optimizePattern(modelKey, init);
+      } else if(opt === 'nelder'){
+        result = await optimizeNelderMead(modelKey, init, 320);
+      } else if(opt === 'de'){
+        result = await optimizeDE(modelKey, init, 140);
+      } else if(opt === 'ga'){
+        result = await optimizeGA(modelKey, init, 180);
+      } else if(opt === 'hybrid_de_nelder'){
+        const r1 = await optimizeDE(modelKey, init, 120);
+        if(!stopFlag){
+          const r2 = await optimizeNelderMead(modelKey, r1.params, 240);
+          result = r2;
+        } else {
+          result = r1;
         }
-
-        if(!improved){
-          step = step.map(x => x*0.75);
-          if(step[0] < 1e-4 && step[1] < 1e-4 && step[2] < 1e-4) break;
-        }
+      } else {
+        result = await optimizePattern(modelKey, init);
       }
 
-      document.getElementById('mullins_r').value = best.r.toPrecision(6);
-      document.getElementById('mullins_m').value = best.m.toPrecision(6);
-      document.getElementById('mullins_beta').value = best.beta.toPrecision(6);
-      document.getElementById('enableMullins').checked = true;
+      if(result){
+        renderResults(modelKey, result.params, result.err);
+      }
 
-      const errAll = calculateError(modelKey, hyperParams);
-      renderResults(modelKey, hyperParams, errAll);
-
-      alert(`Mullins fit complete (unloading only).\nSSE_unloading = ${bestE.toExponential(3)}\nSoftened points used: ${softIdx.length}`);
+      document.getElementById('statusIndicator').classList.add('hidden');
+      document.getElementById('stopBtn').classList.add('hidden');
+      document.getElementById('liveStatus').textContent = stopFlag ? "Stopped." : "Done.";
     }
 
     // -------------------------
     // Init
     // -------------------------
-    window.onload = ()=>{ loadSample('rubber'); };
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSample('rubber');
+    });
   </script>
 </body>
 </html>
-``
