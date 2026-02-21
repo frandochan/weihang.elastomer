@@ -4,29 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- ✅ SEO / discoverability -->
-  <title>Hyperelastic Model Generator (Engineering Tool) — Uniaxial Fit, Live Optimization</title>
-  <meta name="description" content="Engineering tool for calibrating hyperelastic constitutive models from uniaxial stress–strain data. Supports Mooney–Rivlin, Neo-Hookean, Ogden, Arruda–Boyce, Extended Tube, and Bergstrom–Boyce with live optimization and Abaqus-ready parameter output." />
-  <link rel="canonical" href="https://weihangelastomer.com/" />
-  <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1" />
+  <title>Hyperelastic Model Generator — Uniaxial Fit (Tension + Compression)</title>
+
+  <!-- ✅ Updated meta description (single, no duplicates) -->
+  <meta name="description" content="Web-based tool for parameter identification of hyperelastic material models using uniaxial engineering stress–strain data. Supports Neo-Hookean, Mooney–Rivlin, Ogden, Arruda–Boyce, Extended Tube, and Bergstrom–Boyce models with global and local optimization methods." />
+  <meta name="robots" content="index,follow" />
   <meta name="theme-color" content="#0f172a" />
 
-  <!-- Open Graph (non-marketing, descriptive) -->
-  <meta property="og:type" content="website" />
-  <meta property="og:title" content="Hyperelastic Model Generator (Engineering Tool)" />
-  <meta property="og:description" content="Calibrate hyperelastic models from uniaxial test data with live optimization and Abaqus-ready parameters." />
-  <meta property="og:url" content="https://weihangelastomer.com/" />
-
-  <!-- JSON-LD (helps indexing as a software tool) -->
+  <!-- ✅ JSON-LD structured data (SoftwareApplication) -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "Hyperelastic Model Generator (Engineering Tool)",
-    "applicationCategory": "ScienceApplication",
+    "name": "Hyperelastic Model Parameter Identification Tool",
+    "applicationCategory": "ScientificApplication",
     "operatingSystem": "Web",
-    "url": "https://weihangelastomer.com/",
-    "description": "Engineering tool for calibrating hyperelastic constitutive models from uniaxial stress–strain data. Includes Mooney–Rivlin, Neo-Hookean, Ogden, Arruda–Boyce, Extended Tube, and Bergstrom–Boyce with live optimization and Abaqus-ready parameter output."
+    "description": "Web-based tool for identifying hyperelastic material parameters from uniaxial engineering stress–strain data. Supports Neo-Hookean, Mooney–Rivlin, Ogden, Arruda–Boyce, Extended Tube, and Bergstrom–Boyce models with global and local optimization methods.",
+    "keywords": [
+      "hyperelastic material",
+      "uniaxial stress strain",
+      "Mooney Rivlin",
+      "Ogden model",
+      "Arruda Boyce",
+      "Bergstrom Boyce",
+      "rubber material model",
+      "constitutive model fitting"
+    ],
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    }
   }
   </script>
 
@@ -57,1513 +65,1898 @@
 </head>
 
 <body class="bg-slate-50 text-slate-900">
-  <header class="bg-slate-900 text-white py-6 shadow-xl">
-    <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
-      <div>
-        <h1 class="text-3xl font-extrabold tracking-tight">
-          Hyperelastic Model <span class="text-blue-400">Generator</span>
-        </h1>
-        <p class="text-slate-400 text-sm">
-          Engineering tool for constitutive calibration from uniaxial stress–strain data
-        </p>
+<header class="bg-slate-900 text-white py-6 shadow-xl">
+  <div class="max-w-7xl mx-auto px-6 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight">
+        Hyperelastic Model <span class="text-blue-400">Generator</span>
+      </h1>
+      <p class="text-slate-400 text-sm">
+        Uniaxial calibration from engineering stress–strain (tension + compression)
+      </p>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
+        <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
+        <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
       </div>
 
-      <div class="flex items-center gap-3">
-        <div id="statusIndicator" class="hidden flex items-center gap-2 bg-blue-500/20 px-4 py-2 rounded-full border border-blue-500/30">
-          <div class="loader w-4 h-4 border-2 border-white rounded-full"></div>
-          <span class="text-xs font-bold uppercase tracking-widest">Optimizing...</span>
+      <button id="stopBtn" onclick="stopOptimization()"
+              class="hidden px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-xs font-bold uppercase tracking-widest">
+        Stop
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ✅ Crawlable Overview section (added for SEO + indexing) -->
+<section id="overview" class="max-w-5xl mx-auto mt-6 mb-10 px-6">
+  <h2 class="text-xl font-bold text-slate-900 mb-3">Overview</h2>
+
+  <p class="text-sm text-slate-700 leading-relaxed">
+    This web tool performs parameter identification for incompressible or weakly compressible
+    hyperelastic material models using uniaxial experimental data provided as
+    <strong>engineering strain</strong> and <strong>engineering stress</strong>.
+  </p>
+
+  <p class="text-sm text-slate-700 leading-relaxed mt-3">
+    Supported constitutive models include Neo‑Hookean, Mooney–Rivlin (2‑term and 3‑term),
+    Ogden models (N = 2 and N = 3), Arruda–Boyce, an Extended Tube formulation, and a
+    rate‑dependent Bergstrom–Boyce variant.
+  </p>
+
+  <p class="text-sm text-slate-700 leading-relaxed mt-3">
+    Model parameters are calibrated by minimizing the discrepancy between experimental
+    and predicted uniaxial responses using a range of optimization strategies,
+    including random‑walk pattern search, Nelder–Mead local optimization, and
+    global or hybrid global‑to‑local approaches.
+  </p>
+
+  <p class="text-sm text-slate-700 leading-relaxed mt-3">
+    The tool supports combined fitting of tension and compression data, optional
+    weighting between datasets, and diagnostic metrics such as separate
+    goodness‑of‑fit indicators for tension and compression.
+  </p>
+</section>
+
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <!-- Tabs -->
+  <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
+    <button onclick="switchTab('input')" id="tab-input"
+            class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">
+      1. Experimental Data
+    </button>
+    <button onclick="switchTab('cleaning')" id="tab-cleaning"
+            class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
+      2. Preprocessing
+    </button>
+    <button onclick="switchTab('fit')" id="tab-fit"
+            class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
+      3. Optimization &amp; Results
+    </button>
+  </nav>
+
+  <!-- INPUT TAB -->
+  <section id="section-input" class="tab-content">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+      <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+
+        <div class="flex flex-wrap gap-3 justify-between items-start mb-4">
+          <div>
+            <h2 class="text-lg font-bold">Uniaxial Test Data (Tension + Compression)</h2>
+            <p class="text-xs text-slate-500">
+              Option B enabled: sample data loads on start. First real import auto-clears sample once. Later imports append without wiping the other dataset.
+            </p>
+          </div>
+
+          <div class="flex gap-2">
+            <button onclick="loadSample('rubber_both')"
+                    class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
+              Sample Rubber (T+C)
+            </button>
+            <button onclick="loadSample('soft_both')"
+                    class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
+              Sample Soft Tissue (T+C)
+            </button>
+          </div>
         </div>
 
-        <button id="stopBtn" onclick="stopOptimization()"
-          class="hidden px-3 py-2 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 transition text-xs font-bold uppercase tracking-widest">
-          Stop
-        </button>
-      </div>
-    </div>
-  </header>
-
-  <main class="max-w-7xl mx-auto px-6 py-8">
-
-    <!-- ✅ Technical intro (indexable, zero marketing language) -->
-    <section id="technical-intro" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 mb-8">
-      <h2 class="text-lg font-bold text-blue-900 mb-2">Technical overview</h2>
-
-      <div class="text-sm text-slate-700 leading-relaxed space-y-3">
-        <p>
-          This web tool performs parameter identification for incompressible (or weakly compressible) hyperelastic models
-          using uniaxial experimental data provided as engineering strain and engineering stress.
-
-        </p>
-
-        <p>
-          Supported models include Mooney–Rivlin (2/3 term), Neo-Hookean, Ogden (N=2/3), Arruda–Boyce, an Extended Tube
-          formulation, and a rate-dependent Bergstrom–Boyce variant. Optimization options include a random-walk
-          pattern-search mode and global/local hybrid strategies.
-        </p>
-
-        <p class="text-xs text-slate-500">
-          References (model forms): Ogden, R. W. (1972) “Large deformation isotropic elasticity”; Arruda &amp; Boyce (1993)
-          “A three-dimensional constitutive model for the large stretch behavior of rubber elastic materials”.
-        </p>
-      </div>
-    </section>
-
-    <!-- Tabs -->
-    <nav class="flex space-x-2 bg-white p-1.5 rounded-2xl shadow-sm mb-8 border border-slate-200">
-      <button onclick="switchTab('input')" id="tab-input" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all tab-active">
-        1. Experimental Data
-      </button>
-      <button onclick="switchTab('cleaning')" id="tab-cleaning" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
-        2. Preprocessing
-      </button>
-      <button onclick="switchTab('fit')" id="tab-fit" class="tab-btn w-full py-3 px-4 text-sm font-semibold rounded-xl transition-all text-slate-500 hover:bg-slate-50">
-        3. Optimization &amp; Results
-      </button>
-    </nav>
-
-    <!-- INPUT TAB -->
-    <section id="section-input" class="tab-content">
-      <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
-        <div class="lg:col-span-3 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div class="flex flex-wrap gap-3 justify-between items-center mb-4">
-            <div>
-              <h2 class="text-lg font-bold">Uniaxial Test Data</h2>
-              <p class="text-xs text-slate-500">
-                Enter manually in the table or
-                <a href="#" class="text-blue-700 underline"
-                   onclick="document.getElementById('fileInput').click(); return false;">
-                  upload Excel/CSV
-                </a>.
-              </p>
-            </div>
-            <div class="flex gap-2">
-              <button onclick="loadSample('rubber')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
-                Sample Rubber
-              </button>
-              <button onclick="loadSample('soft')" class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-slate-50 uppercase">
-                Sample Soft Tissue
-              </button>
+        <!-- Enable selection in Experimental Data -->
+        <div class="mb-5 p-4 rounded-2xl border border-slate-200 bg-slate-50">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="text-sm font-bold text-blue-900">Enable datasets for fitting (applies to preprocessing + fit)</div>
+            <div class="text-xs text-slate-500">
+              Tip: for mixed T+C, keep Auto-zero OFF in preprocessing.
             </div>
           </div>
 
-          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleFileUpload(event)" />
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200">
+              <label class="flex items-center gap-2 text-sm font-semibold">
+                <input id="includeTension_in" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                Enable Tension (ε ≥ 0)
+              </label>
+              <span class="text-[11px] text-slate-500">Used in fit &amp; plots</span>
+            </div>
 
-          <div class="overflow-auto">
-            <table class="data-table w-full border border-slate-200 rounded-xl">
-              <thead class="bg-slate-50">
+            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-200">
+              <label class="flex items-center gap-2 text-sm font-semibold">
+                <input id="includeCompression_in" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                Enable Compression (ε ≤ 0)
+              </label>
+              <span class="text-[11px] text-slate-500">Used in fit &amp; plots</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two tables -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- TENSION -->
+          <div class="bg-slate-50/40 p-5 rounded-2xl border border-slate-200">
+            <div class="flex flex-wrap gap-3 justify-between items-center mb-3">
+              <div>
+                <h3 class="text-sm font-extrabold text-blue-900">Uniaxial Tension</h3>
+                <p class="text-[11px] text-slate-500">Engineering strain ε ≥ 0</p>
+              </div>
+              <button onclick="loadSample('rubber_tension')"
+                      class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-white uppercase">
+                Sample T
+              </button>
+            </div>
+
+            <div class="overflow-auto">
+              <table class="data-table w-full border border-slate-200 rounded-xl bg-white">
+                <thead class="bg-slate-50">
                 <tr>
                   <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Strain</th>
                   <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Stress</th>
                   <th class="w-10 border-b"></th>
                 </tr>
-              </thead>
-              <tbody id="dataBody"></tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody id="dataBodyTension"></tbody>
+              </table>
+            </div>
 
-          <div class="mt-4 flex flex-wrap gap-2">
-            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm" onclick="addRow()">
-              Add Row
-            </button>
-            <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 text-sm"
-                    onclick="tableToTextarea(); alert('Data captured. You can now go to Preprocessing/Optimization.');">
-              Apply Table Data
-            </button>
-          </div>
-
-          <textarea id="uniaxialInput" class="hidden"></textarea>
-        </div>
-
-        <div class="space-y-6"></div>
-      </div>
-    </section>
-
-    <!-- CLEANING TAB -->
-    <section id="section-cleaning" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="space-y-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-bold mb-4 text-blue-900">Data Processing</h2>
-
-            <div class="space-y-4">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="doZero2" checked class="w-5 h-5 text-blue-600 rounded">
-                <label class="text-sm font-medium">Auto-zero (subtract first point)</label>
-              </div>
-
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="stressIsTrue" class="w-5 h-5 text-blue-600 rounded">
-                <label class="text-sm font-medium">
-                  Input stress is TRUE (Cauchy) → convert to NOMINAL (engineering): $P = \sigma / \lambda$
-                </label>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-slate-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
-                <input type="number" id="groupThresh2" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm">
-                <p class="mt-1 text-[11px] text-slate-500">
-                  Binning is disabled when Mullins is enabled or a path-dependent model is selected (history must be preserved).
-                </p>
-              </div>
-
-              <button onclick="processAndRender()"
-                      class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">
-                Update Cleaning
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-white text-sm"
+                      onclick="addRowTo('dataBodyTension')">
+                Add Row
+              </button>
+              <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-white text-sm"
+                      onclick="tablesToTextareas(); alert('Tension data captured.');">
+                Apply Tension
               </button>
             </div>
+
+            <textarea id="uniaxialTensionInput" class="hidden"></textarea>
           </div>
 
-          <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
-          <div id="ingestDebug" class="bg-white p-4 rounded-xl border border-slate-200 text-xs mono"></div>
-        </div>
-
-        <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 class="text-center text-sm font-bold text-slate-400 mb-4">Raw vs Cleaned Data</h3>
-          <div class="chart-container" style="height:400px">
-            <canvas id="preChart"></canvas>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FIT TAB -->
-    <section id="section-fit" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div class="lg:col-span-1 space-y-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
-
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
-            <select id="modelSelect" onchange="runOptimization()"
-                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
-              <option value="mooney2">Mooney-Rivlin (2-Term)</option>
-              <option value="mooney3">Mooney-Rivlin (3-Term)</option>
-              <option value="neo">Neo-Hookean</option>
-              <option value="ogden2">Ogden (N=2)</option>
-              <option value="ogden3">Ogden (N=3)</option>
-              <option value="arruda">Arruda-Boyce</option>
-              <option value="exttube">Extended Tube</option>
-              <option value="bb">Bergstrom-Boyce (TB,BB)</option>
-            </select>
-
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Optimizer</label>
-            <select id="optimizerSelect"
-                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
-              <option value="pattern">Pattern Search (MCal Random Walk)</option>
-              <option value="nelder">Nelder–Mead (local)</option>
-              <option value="de">Differential Evolution (global)</option>
-              <option value="ga">Genetic Algorithm (global)</option>
-              <option value="hybrid_de_nelder" selected>Hybrid: DE → Nelder–Mead</option>
-            </select>
-
-            <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Error Norm / Weighting</label>
-            <select id="errorWeightSelect"
-                    class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
-              <option value="mcal" selected>MCalibration-style (low-strain dominant)</option>
-              <option value="uniform">Uniform SSE</option>
-              <option value="highstrain">High-strain weighted</option>
-              <option value="normalized">Normalized (relative)</option>
-              <option value="log">Log-stress (optional)</option>
-            </select>
-
-            <div class="mt-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <div class="flex items-center justify-between gap-3">
-                <label class="flex items-center gap-2 text-sm font-semibold">
-                  <input id="liveUpdate" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
-                  Curve update
-                </label>
-
-                <div class="flex items-center gap-2">
-                  <span class="text-xs font-bold text-slate-500 uppercase">Every</span>
-                  <input id="liveEvery" type="number" value="10" min="1" step="1"
-                         class="w-20 p-2 border border-slate-200 rounded-lg text-sm bg-white">
-                  <span class="text-xs text-slate-500">iters/gen</span>
-                </div>
+          <!-- COMPRESSION -->
+          <div class="bg-slate-50/40 p-5 rounded-2xl border border-slate-200">
+            <div class="flex flex-wrap gap-3 justify-between items-center mb-3">
+              <div>
+                <h3 class="text-sm font-extrabold text-blue-900">Uniaxial Compression</h3>
+                <p class="text-[11px] text-slate-500">Engineering strain ε ≤ 0 (must be &gt; −1)</p>
               </div>
-              <div id="liveStatus" class="mt-2 text-xs text-slate-600 mono">Idle.</div>
+              <button onclick="loadSample('rubber_compression')"
+                      class="text-[10px] font-bold border border-slate-200 px-3 py-1 rounded hover:bg-white uppercase">
+                Sample C
+              </button>
             </div>
 
-            <div class="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50">
-              <div class="flex items-center gap-3">
-                <input type="checkbox" id="enableMullins" class="w-5 h-5 text-blue-600 rounded">
-                <label class="text-sm font-semibold">Enable Mullins effect (Ogden–Roxburgh-like)</label>
-              </div>
+            <div class="overflow-auto">
+              <table class="data-table w-full border border-slate-200 rounded-xl bg-white">
+                <thead class="bg-slate-50">
+                <tr>
+                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Engineering Strain</th>
+                  <th class="text-left text-xs font-bold uppercase tracking-widest text-slate-500 px-3 py-2 border-b">Stress</th>
+                  <th class="w-10 border-b"></th>
+                </tr>
+                </thead>
+                <tbody id="dataBodyCompression"></tbody>
+              </table>
+            </div>
 
-              <div class="grid grid-cols-3 gap-3 mt-3">
-                <div>
-                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">r</label>
-                  <input id="mullins_r" type="number" step="0.1" value="1.5"
-                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">m</label>
-                  <input id="mullins_m" type="number" step="1000" value="1000000"
-                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-slate-500 uppercase mb-1">β</label>
-                  <input id="mullins_beta" type="number" step="0.01" value="0.2"
-                         class="w-full p-2 border border-slate-200 rounded-lg text-sm">
-                </div>
-              </div>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-white text-sm"
+                      onclick="addRowTo('dataBodyCompression')">
+                Add Row
+              </button>
+              <button class="px-3 py-2 rounded-lg border border-slate-200 hover:bg-white text-sm"
+                      onclick="tablesToTextareas(); alert('Compression data captured.');">
+                Apply Compression
+              </button>
+            </div>
 
-              <p class="text-[11px] text-slate-500 mt-2">
-                Mullins affects unloading/reloading only. For monotonic data it often stays inactive.
+            <textarea id="uniaxialCompressionInput" class="hidden"></textarea>
+          </div>
+        </div>
+
+        <!-- Separate Upload buttons (append-only) + Clear ALL -->
+        <div class="mt-5 p-4 rounded-2xl border border-slate-200 bg-white">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div class="text-sm font-bold text-blue-900">Excel/CSV import </div>
+              <div class="text-xs text-slate-500">Import and clears sample data.</div>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <label class="flex items-center gap-2 text-xs text-slate-600">
+                <input id="strictSignFilter" type="checkbox" class="w-4 h-4 text-blue-600 rounded" checked>
+                Strict sign filter (T: ε≥0, C: ε≤0)
+              </label>
+            </div>
+          </div>
+
+          <input id="fileInputTension" type="file" accept=".xlsx,.xls,.csv" class="hidden"
+                 onchange="handleFileUploadSeparate(event,'tension')"/>
+          <input id="fileInputCompression" type="file" accept=".xlsx,.xls,.csv" class="hidden"
+                 onchange="handleFileUploadSeparate(event,'compression')"/>
+
+          <div class="mt-3 flex flex-wrap gap-3">
+            <button onclick="document.getElementById('fileInputTension').click()"
+                    class="px-3 py-2 border rounded-lg text-sm hover:bg-slate-50">
+              Upload Tension Excel
+            </button>
+
+            <button onclick="document.getElementById('fileInputCompression').click()"
+                    class="px-3 py-2 border rounded-lg text-sm hover:bg-slate-50">
+              Upload Compression Excel
+            </button>
+
+            <button onclick="tablesToTextareas(); alert('All table data captured. Go to Preprocessing / Fit.');"
+                    class="px-3 py-2 border rounded-lg text-sm hover:bg-slate-50">
+              Apply All
+            </button>
+
+            <button onclick="clearAllData()"
+                    class="px-3 py-2 border rounded-lg text-sm text-red-700 hover:bg-red-50">
+              Clear ALL Data
+            </button>
+          </div>
+
+          <p class="mt-2 text-[11px] text-slate-500">
+            Columns: importer auto-detects headers containing “strain” and “stress”; otherwise uses the first two columns.
+          </p>
+        </div>
+
+      </div>
+
+      <div class="space-y-6"></div>
+    </div>
+  </section>
+
+  <!-- CLEANING TAB -->
+  <section id="section-cleaning" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold mb-4 text-blue-900">Data Processing</h2>
+
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="doZero2" class="w-5 h-5 text-blue-600 rounded">
+              <label class="text-sm font-medium">Auto-zero (subtract first point)</label>
+            </div>
+
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="stressIsTrue" class="w-5 h-5 text-blue-600 rounded">
+              <label class="text-sm font-medium">
+                Input stress is TRUE (Cauchy) → convert to NOMINAL: $P = \sigma / \lambda$
+              </label>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-700 mb-1">Strain Binning ($\Delta\epsilon$)</label>
+              <input type="number" id="groupThresh2" value="0.005" step="0.001" class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+              <p class="mt-1 text-[11px] text-slate-500">
+                Binning is disabled when Mullins is enabled or a path-dependent model is selected (history must be preserved).
               </p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-4 mb-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB Strain rate (1/s)</label>
-                <input id="bbRate" type="number" step="0.001" value="0.01"
-                       class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
-              </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB substeps</label>
-                <input id="bbSubsteps" type="number" step="1" value="10"
-                       class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
-              </div>
-            </div>
-
-            <button onclick="runOptimization()"
-                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
-              RECALIBRATE FIT
+            <button onclick="processAndRender()"
+                    class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg hover:bg-blue-700 transition-all">
+              Update Cleaning
             </button>
-          </div>
-
-          <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
-            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
-            <div id="paramsContainer" class="space-y-3 mono text-sm"></div>
-            <div class="mt-6 pt-6 border-t border-slate-100">
-              <div class="flex justify-between items-center mb-2">
-                <span class="text-xs font-bold text-slate-400 uppercase">Fit Quality ($R^2$) (informational)</span>
-                <span id="r2Val" class="text-sm font-bold text-emerald-600">0.0000</span>
-              </div>
-            </div>
           </div>
         </div>
 
-        <div class="lg:col-span-2 space-y-6">
-          <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="chart-container">
-              <canvas id="valChart"></canvas>
+        <div id="summaryStats" class="bg-blue-50 p-4 rounded-xl border border-blue-100 text-xs"></div>
+        <div id="ingestDebug" class="bg-white p-4 rounded-xl border border-slate-200 text-xs mono"></div>
+      </div>
+
+      <div class="lg:col-span-2 bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+        <h3 class="text-center text-sm font-bold text-slate-400 mb-4">Raw vs Cleaned Data</h3>
+        <div class="chart-container" style="height:400px">
+          <canvas id="preChart"></canvas>
+        </div>
+        <p class="mt-2 text-[11px] text-slate-500">
+          Blue = tension, Red = compression (cleaned). Grey tones = raw.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- FIT TAB -->
+  <section id="section-fit" class="tab-content hidden">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1 space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <h2 class="text-lg font-bold mb-4 text-blue-900">Solver Settings</h2>
+
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Constitutive Model</label>
+          <select id="modelSelect" onchange="runOptimization()"
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
+            <option value="mooney2">Mooney-Rivlin (2-Term)</option>
+            <option value="mooney3">Mooney-Rivlin (3-Term)</option>
+            <option value="neo">Neo-Hookean</option>
+            <option value="ogden2">Ogden (N=2)</option>
+            <option value="ogden3">Ogden (N=3)</option>
+            <option value="arruda">Arruda-Boyce</option>
+            <option value="exttube">Extended Tube</option>
+            <option value="bb">Bergstrom-Boyce (TB,BB)</option>
+          </select>
+
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Optimizer</label>
+          <select id="optimizerSelect"
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
+            <option value="pattern">Pattern Search (Random Walk)</option>
+            <option value="nelder">Nelder–Mead (local)</option>
+            <option value="de">Differential Evolution (global)</option>
+            <option value="ga">Genetic Algorithm (global)</option>
+            <option value="hybrid_de_nelder" selected>Hybrid: DE → Nelder–Mead</option>
+          </select>
+
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Error Norm / Weighting</label>
+          <select id="errorWeightSelect"
+                  class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-700 mb-4">
+            <option value="mcal" selected>Low-strain dominant </option>
+            <option value="uniform">Uniform SSE</option>
+            <option value="highstrain">High-strain weighted</option>
+            <option value="normalized">Normalized (relative)</option>
+            <option value="log">Log-stress (optional)</option>
+          </select>
+
+          <label class="block text-xs font-bold text-slate-400 uppercase mb-2">Include Data in Fit (with weights)</label>
+          <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 mb-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 text-sm font-semibold">
+                <input id="includeTension" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                Use Tension (ε ≥ 0)
+              </label>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase">Weight</span>
+                <input id="wTension" type="number" value="1.0" step="0.1" min="0"
+                       class="w-24 p-2 border border-slate-200 rounded-lg text-sm bg-white">
+              </div>
             </div>
-            <p class="mt-2 text-xs text-slate-500">
-              Blue = Best-so-far, Green dashed = Current candidate.
+
+            <div class="flex items-center justify-between">
+              <label class="flex items-center gap-2 text-sm font-semibold">
+                <input id="includeCompression" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                Use Compression (ε ≤ 0)
+              </label>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase">Weight</span>
+                <input id="wCompression" type="number" value="1.0" step="0.1" min="0"
+                       class="w-24 p-2 border border-slate-200 rounded-lg text-sm bg-white">
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500">
+              Total point-weight = (error weighting) × (tension/compression weight). Set weight=0 to ignore a dataset.
             </p>
           </div>
 
-          <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
-            <span class="text-slate-500 block mb-2"># Keyword-style output</span>
+          <div class="mt-2 p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center justify-between gap-3">
+              <label class="flex items-center gap-2 text-sm font-semibold">
+                <input id="liveUpdate" type="checkbox" class="w-5 h-5 text-blue-600 rounded" checked>
+                Curve update
+              </label>
+
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-500 uppercase">Every</span>
+                <input id="liveEvery" type="number" value="10" min="1" step="1"
+                       class="w-20 p-2 border border-slate-200 rounded-lg text-sm bg-white">
+                <span class="text-xs text-slate-500">iters/gen</span>
+              </div>
+            </div>
+            <div id="liveStatus" class="mt-2 text-xs text-slate-600 mono">Idle.</div>
+          </div>
+
+          <div class="mt-4 p-4 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="flex items-center gap-3">
+              <input type="checkbox" id="enableMullins" class="w-5 h-5 text-blue-600 rounded">
+              <label class="text-sm font-semibold">Enable Mullins effect (Ogden–Roxburgh-like)</label>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">r</label>
+                <input id="mullins_r" type="number" step="0.1" value="1.5"
+                       class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">m</label>
+                <input id="mullins_m" type="number" step="1000" value="1000000"
+                       class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-1">β</label>
+                <input id="mullins_beta" type="number" step="0.01" value="0.2"
+                       class="w-full p-2 border border-slate-200 rounded-lg text-sm">
+              </div>
+            </div>
+
+            <p class="text-[11px] text-slate-500 mt-2">
+              Mullins affects unloading/reloading only. For monotonic data it often stays inactive.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-4 mb-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB Strain rate (1/s)</label>
+              <input id="bbRate" type="number" step="0.001" value="0.01"
+                     class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">BB substeps</label>
+              <input id="bbSubsteps" type="number" step="1" value="10"
+                     class="w-full p-2 border border-slate-200 rounded-lg text-sm bg-slate-50">
+            </div>
+          </div>
+
+          <button onclick="runOptimization()"
+                  class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5">
+            RECALIBRATE FIT
+          </button>
+        </div>
+
+        <div id="resultsCard" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hidden">
+          <h3 class="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Optimized Parameters</h3>
+          <div id="paramsContainer" class="space-y-3 mono text-sm"></div>
+
+          <div class="mt-6 pt-6 border-t border-slate-100 space-y-2">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-400 uppercase">R² (All) — diagnostic</span>
+              <span id="r2All" class="text-sm font-bold text-emerald-600">N/A</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-400 uppercase">R² (Tension) — diagnostic</span>
+              <span id="r2T" class="text-sm font-bold text-emerald-600">N/A</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-400 uppercase">R² (Compression) — diagnostic</span>
+              <span id="r2C" class="text-sm font-bold text-emerald-600">N/A</span>
+            </div>
+            <p class="text-[11px] text-slate-500">
+              Same fitted parameter set; R² is computed on subsets only for reporting.
+            </p>
           </div>
         </div>
       </div>
-    </section>
-  </main>
 
-  <script>
-    // -------------------------
-    // Globals
-    // -------------------------
-    let cleanData = [], chart = null;
-    let rawData = [], preChart = null;
+      <div class="lg:col-span-2 space-y-6">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+          <div class="chart-container">
+            <canvas id="valChart"></canvas>
+          </div>
+          <p class="mt-2 text-xs text-slate-500">
+            Blue = Best-so-far, Green dashed = Current candidate. Experiment points are split: orange (tension) and purple (compression).
+          </p>
+        </div>
 
-    let stopFlag = false;
-    function stopOptimization(){ stopFlag = true; }
+        <div id="abaqusSnippet" class="bg-slate-900 p-6 rounded-2xl shadow-inner mono text-xs text-blue-300 overflow-x-auto border border-slate-800">
+          <span class="text-slate-500 block mb-2"># Keyword-style output</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-    // -------------------------
-    // Tabs
-    // -------------------------
-    function switchTab(id){
-      document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
-      document.getElementById(`section-${id}`).classList.remove('hidden');
-      document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-slate-500'));
-      document.getElementById(`tab-${id}`).classList.add('tab-active');
+</main>
 
-      if(id==='cleaning') processAndRender();
-      if(id==='fit') runOptimization();
+<script>
+  // -------------------------
+  // Globals
+  // -------------------------
+  let cleanData = [], rawData = [];
+  let chart = null, preChart = null;
+  let stopFlag = false;
+
+  // ✅ Option B state:
+  // sampleLoaded = sample currently displayed (initially true after loadSample)
+  // userImportedOnce = first real import has happened since last sample load
+  let sampleLoaded = false;
+  let userImportedOnce = false;
+
+  function stopOptimization(){ stopFlag = true; }
+
+  // -------------------------
+  // Tabs
+  // -------------------------
+  function switchTab(id){
+    document.querySelectorAll('.tab-content').forEach(c=>c.classList.add('hidden'));
+    document.getElementById(`section-${id}`).classList.remove('hidden');
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('tab-active','text-slate-500'));
+    document.getElementById(`tab-${id}`).classList.add('tab-active');
+
+    if(id==='cleaning') processAndRender();
+    if(id==='fit') runOptimization();
+  }
+
+  // -------------------------
+  // Helpers
+  // -------------------------
+  function avg(arr,k){ return arr.reduce((a,b)=>a+b[k],0)/arr.length; }
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+
+  function randn(){
+    let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+  function jitterAround(base, rel=0.25){ return base.map(x => x + (Math.abs(x)+1)*rel*randn()); }
+  async function yieldToUI(){ await new Promise(requestAnimationFrame); }
+
+  // -------------------------
+  // Sync include toggles (Input tab <-> Fit tab)
+  // -------------------------
+  function syncIncludeUI(from){
+    const inT = document.getElementById('includeTension_in');
+    const inC = document.getElementById('includeCompression_in');
+    const fitT = document.getElementById('includeTension');
+    const fitC = document.getElementById('includeCompression');
+    if(!inT || !inC || !fitT || !fitC) return;
+
+    if(from === 'input'){
+      fitT.checked = inT.checked;
+      fitC.checked = inC.checked;
+    } else {
+      inT.checked = fitT.checked;
+      inC.checked = fitC.checked;
+    }
+  }
+
+  // -------------------------
+  // Table helpers
+  // -------------------------
+  function addRowTo(tbodyId, strain = '', stress = ''){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.10" value="${strain}"></td>
+      <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.35" value="${stress}"></td>
+      <td class="border-t px-1 py-1 text-right">
+        <button class="text-xs text-red-600 hover:underline" onclick="this.closest('tr').remove()">Delete</button>
+      </td>`;
+    document.getElementById(tbodyId).appendChild(tr);
+  }
+  function clearTable(tbodyId){ document.getElementById(tbodyId).innerHTML=''; }
+
+  function tableToTextareaById(tbodyId, textareaId){
+    const rows = [...document.querySelectorAll(`#${tbodyId} tr`)];
+    const lines = rows.map(r=>{
+      const cells = r.querySelectorAll('input');
+      const x = cells[0].value.trim();
+      const y = cells[1].value.trim();
+      return (x!=='' && y!=='') ? `${x} ${y}` : null;
+    }).filter(Boolean);
+    document.getElementById(textareaId).value = lines.join('\n');
+  }
+
+  function textareaToTableById(textareaId, tbodyId){
+    const txt = document.getElementById(textareaId).value || '';
+    clearTable(tbodyId);
+    const lines = txt.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length===0){ addRowTo(tbodyId); addRowTo(tbodyId); return; }
+    for(const line of lines){
+      const parts = line.split(/[\s,;]+/).filter(Boolean);
+      if(parts.length>=2) addRowTo(tbodyId, parts[0], parts[1]);
+    }
+  }
+
+  function tablesToTextareas(){
+    tableToTextareaById('dataBodyTension', 'uniaxialTensionInput');
+    tableToTextareaById('dataBodyCompression', 'uniaxialCompressionInput');
+  }
+
+  // -------------------------
+  // ✅ Option B helper: clear sample once on first real import
+  // -------------------------
+  function clearSampleOnceIfNeeded(){
+    if(sampleLoaded && !userImportedOnce){
+      clearTable('dataBodyTension');
+      clearTable('dataBodyCompression');
+      document.getElementById('uniaxialTensionInput').value = '';
+      document.getElementById('uniaxialCompressionInput').value = '';
+      tablesToTextareas();
+      userImportedOnce = true;
+      sampleLoaded = false; // no longer sample-only state
+    }
+  }
+
+  // -------------------------
+  // ✅ Append-only upload per dataset (does NOT clear other dataset)
+  //     + Option B: clears sample once on first import
+  // -------------------------
+  function handleFileUploadSeparate(ev, target){
+    const file = ev.target.files[0];
+    if(!file) return;
+
+    if(typeof XLSX === 'undefined'){
+      alert("SheetJS (XLSX) not loaded. Check script tag.");
+      return;
     }
 
-    // -------------------------
-    // Helpers
-    // -------------------------
-    function avg(arr,k){ return arr.reduce((a,b)=>a+b[k],0)/arr.length; }
-    function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
-    function clamp01(v){ return Math.max(0, Math.min(1, v)); }
+    // Option B: if sample is present, clear it once on first import
+    clearSampleOnceIfNeeded();
 
-    function randn(){
-      let u=0,v=0; while(u===0) u=Math.random(); while(v===0) v=Math.random();
-      return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-    }
-    function jitterAround(base, rel=0.25){
-      return base.map(x => x + (Math.abs(x)+1)*rel*randn());
-    }
-    async function yieldToUI(){ await new Promise(requestAnimationFrame); }
+    const strict = document.getElementById('strictSignFilter')?.checked ?? true;
+    const tbody = (target === 'tension') ? 'dataBodyTension' : 'dataBodyCompression';
 
-    // -------------------------
-    // Table helpers
-    // -------------------------
-    function addRow(strain = '', stress = ''){
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.10" value="${strain}"></td>
-        <td class="border-t px-3 py-1"><input type="number" step="any" placeholder="e.g., 0.35" value="${stress}"></td>
-        <td class="border-t px-1 py-1 text-right">
-          <button class="text-xs text-red-600 hover:underline" onclick="this.closest('tr').remove()">Delete</button>
-        </td>`;
-      document.getElementById('dataBody').appendChild(tr);
-    }
-    function clearTable(){ document.getElementById('dataBody').innerHTML=''; }
+    const reader = new FileReader();
+    reader.onload = (e)=>{
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
 
-    function tableToTextarea(){
-      const rows = [...document.querySelectorAll('#dataBody tr')];
-      const lines = rows.map(r=>{
-        const cells = r.querySelectorAll('input');
-        const x = cells[0].value.trim();
-        const y = cells[1].value.trim();
-        return (x!=='' && y!=='') ? `${x} ${y}` : null;
-      }).filter(Boolean);
-      document.getElementById('uniaxialInput').value = lines.join('\n');
-    }
-
-    function textareaToTable(){
-      const txt = document.getElementById('uniaxialInput').value || '';
-      clearTable();
-      const lines = txt.split('\n').map(l=>l.trim()).filter(Boolean);
-      if(lines.length===0){ addRow(); addRow(); return; }
-      for(const line of lines){
-        const parts = line.split(/[\s,;]+/).filter(Boolean);
-        if(parts.length>=2) addRow(parts[0], parts[1]);
-      }
-    }
-
-    async function handleFileUpload(ev){
-      const file = ev.target.files[0];
-      if(!file) return;
-
-      if(typeof XLSX === 'undefined'){
-        alert("SheetJS (XLSX) not loaded. Check the script tag.");
+      if(!rows || rows.length < 1){
+        alert("No data found in file.");
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e)=>{
-        const data = new Uint8Array(e.target.result);
-        const wb = XLSX.read(data, {type: 'array'});
-        const ws = wb.Sheets[wb.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(ws, {header:1, raw:true});
-
-        if(!rows || rows.length < 1){
-          alert("No data found in file.");
-          return;
-        }
-
-        // header detection
-        let colX = 0, colY = 1;
-        const header = (rows[0] || []).map(v => (v||'').toString().toLowerCase());
-        header.forEach((h,i)=>{
-          if(h.includes('strain')) colX = i;
-          if(h.includes('stress')) colY = i;
-        });
-
-        clearTable();
-        for(let r=0; r<rows.length; r++){
-          const row = rows[r];
-          const x = parseFloat(row[colX]);
-          const y = parseFloat(row[colY]);
-          if(Number.isFinite(x) && Number.isFinite(y)){
-            addRow(x, y);
-          }
-        }
-        tableToTextarea();
-      };
-      reader.readAsArrayBuffer(file);
-      ev.target.value = '';
-    }
-
-    function loadSample(type){
-      const data = type==='rubber' ?
-        "0.00 0.00\n0.10 0.35\n0.30 0.95\n0.60 1.80\n1.00 3.20\n1.50 5.10\n2.20 8.50\n3.00 15.00" :
-        "0.00 0.00\n0.02 0.01\n0.05 0.04\n0.10 0.15\n0.15 0.40\n0.20 0.90\n0.25 1.80\n0.30 3.50";
-      document.getElementById('uniaxialInput').value = data;
-      textareaToTable();
-      switchTab('input');
-    }
-
-    // -------------------------
-    // Parsing
-    // -------------------------
-    function parseRawFromTextarea(keepOrder=false){
-      const input = document.getElementById('uniaxialInput').value || '';
-      const lines = input.split('\n')
-        .map(l=>l.trim().split(/[\s,;]+/).filter(Boolean))
-        .filter(p=>p.length>=2);
-
-      let pts = lines
-        .map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1])}))
-        .filter(p=>Number.isFinite(p.x) && Number.isFinite(p.y));
-
-      if(!keepOrder) pts.sort((a,b)=>a.x-b.x);
-      return pts;
-    }
-
-    // -------------------------
-    // Preprocessing
-    // -------------------------
-    function applyPreprocessing(pts, allowBinning=true){
-      let out = [...pts];
-
-      const zeroBox = document.getElementById('doZero2');
-      const binInput = document.getElementById('groupThresh2');
-      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
-
-      if(zeroBox && zeroBox.checked && out.length>0){
-        const ox = out[0].x, oy = out[0].y;
-        out = out.map(p=>({x:p.x-ox, y:p.y-oy}));
-      }
-
-      if(stressIsTrue){
-        out = out.map(p=>{
-          const L = 1 + p.x;
-          if(!Number.isFinite(L) || L <= 1e-12) return {x:p.x, y:NaN};
-          return {x:p.x, y:p.y / L};
-        }).filter(p=>Number.isFinite(p.y));
-      }
-
-      if(!allowBinning) return out;
-
-      const thresh = parseFloat(binInput ? binInput.value : '0.005');
-      if(Number.isFinite(thresh) && thresh>0 && out.length>0){
-        let grouped=[], current=[out[0]];
-        for(let i=1;i<out.length;i++){
-          if(out[i].x - current[0].x <= thresh) current.push(out[i]);
-          else { grouped.push({x:avg(current,'x'), y:avg(current,'y')}); current=[out[i]]; }
-        }
-        grouped.push({x:avg(current,'x'), y:avg(current,'y')});
-        out = grouped;
-      }
-      return out;
-    }
-
-    function getOptimizationData(){
-      const modelKey = document.getElementById('modelSelect')?.value;
-      const mullinsOn = document.getElementById('enableMullins')?.checked;
-      const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
-
-      const raw = parseRawFromTextarea(keepOrder);
-      const allowBinning = !keepOrder;
-      return applyPreprocessing(raw, allowBinning);
-    }
-
-    function renderIngestDebug(rawPts, cleanedPts){
-      const div = document.getElementById('ingestDebug');
-      if(!div) return;
-
-      const stats = (pts)=>{
-        if(!pts || pts.length===0) return {n:0, xmin:0, xmax:0, ymin:0, ymax:0};
-        const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
-        return {
-          n: pts.length,
-          xmin: Math.min(...xs), xmax: Math.max(...xs),
-          ymin: Math.min(...ys), ymax: Math.max(...ys)
-        };
-      };
-
-      const s0 = stats(rawPts);
-      const s1 = stats(cleanedPts);
-
-      const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
-      const modelKey = document.getElementById('modelSelect')?.value;
-      const keepOrder = !!(document.getElementById('enableMullins')?.checked) || (MODELS[modelKey]?.pathDependent === true);
-
-      div.innerHTML =
-        `RAW: n=${s0.n}  ε[min,max]=[${s0.xmin.toExponential(3)}, ${s0.xmax.toExponential(3)}]  ` +
-        `s[min,max]=[${s0.ymin.toExponential(3)}, ${s0.ymax.toExponential(3)}]<br>` +
-        `CLEAN: n=${s1.n}  ε[min,max]=[${s1.xmin.toExponential(3)}, ${s1.xmax.toExponential(3)}]  ` +
-        `s[min,max]=[${s1.ymin.toExponential(3)}, ${s1.ymax.toExponential(3)}]<br>` +
-        `Flags: keepOrder=${keepOrder}  binning=${!keepOrder}  true→nominal=${!!stressIsTrue}`;
-    }
-
-    function renderPreChart(datasets){
-      const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
-      if(preChart) preChart.destroy();
-      preChart = new Chart(ctx, {
-        type:'scatter',
-        data:{
-          datasets: datasets.map(d=>({
-            label: d.label,
-            data: d.data,
-            borderColor: d.color,
-            backgroundColor: d.color,
-            pointRadius: d.pointRadius ?? 3,
-            showLine: false
-          }))
-        },
-        options:{
-          responsive:true, maintainAspectRatio:false, animation:false,
-          scales:{
-            x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
-            y:{ title:{display:true, text:'Stress (input or nominal)'} }
-          }
-        }
+      // Detect columns
+      let colX = 0, colY = 1;
+      const header = (rows[0] || []).map(v => (v||'').toString().toLowerCase());
+      header.forEach((h,i)=>{
+        if(h.includes('strain')) colX = i;
+        if(h.includes('stress')) colY = i;
       });
-    }
 
-    function processAndRender(){
-      tableToTextarea();
+      let added = 0;
+      for(let r=0; r<rows.length; r++){
+        const x = parseFloat(rows[r][colX]);
+        const y = parseFloat(rows[r][colY]);
+        if(!Number.isFinite(x) || !Number.isFinite(y)) continue;
 
-      const modelKey = document.getElementById('modelSelect')?.value;
-      const mullinsOn = document.getElementById('enableMullins')?.checked;
-      const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
-
-      rawData = parseRawFromTextarea(keepOrder);
-      const allowBinning = !keepOrder;
-      cleanData = applyPreprocessing(rawData, allowBinning);
-
-      const statsDiv = document.getElementById('summaryStats');
-      if(statsDiv){
-        statsDiv.innerHTML =
-          `Points: ${rawData.length} raw → ${cleanData.length} cleaned. ` +
-          `Last strain: ${cleanData.length ? cleanData[cleanData.length-1].x.toFixed(3) : 0}`;
-      }
-
-      renderIngestDebug(rawData, cleanData);
-
-      renderPreChart([
-        {label:'Raw', data:rawData, color:'#CBD5E1'},
-        {label:'Cleaned', data:cleanData, color:'#3B82F6', pointRadius:5}
-      ]);
-    }
-
-    // -------------------------
-    // Extended Tube
-    // -------------------------
-    function extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta){
-      const J = l1*l2*l3;
-      const Jm23 = Math.pow(J, -2/3);
-      const D = Jm23 * (l1*l1 + l2*l2 + l3*l3);
-
-      const x = (delta*delta) * (D - 3);
-      const oneMinusX = 1 - x;
-      if(oneMinusX <= 1e-12) return Number.POSITIVE_INFINITY;
-
-      const gamma = (1 - delta*delta) * (D - 3) / oneMinusX;
-      const Wc = 0.5 * Gc * (gamma + Math.log(oneMinusX));
-
-      const invb2 = 1/(beta*beta);
-      const We = 2 * Ge * invb2 *
-        (Math.pow(l1, -beta) + Math.pow(l2, -beta) + Math.pow(l3, -beta) - 3);
-
-      return Wc + We;
-    }
-
-    function extendedTubeNominalStress(lambda, Gc, delta, Ge, beta){
-      if(!Number.isFinite(lambda) || lambda <= 0) return Number.NaN;
-
-      Gc = Math.max(0, Gc);
-      Ge = Math.max(0, Ge);
-      delta = Math.max(0, delta);
-      beta = clamp(beta, 1e-6, 1.0);
-
-      const l1 = lambda;
-      const l2 = 1/Math.sqrt(lambda);
-      const l3 = l2;
-
-      const eps1 = 1e-6 * Math.max(1, Math.abs(l1));
-      const eps2 = 1e-6 * Math.max(1, Math.abs(l2));
-
-      const W = (a,b,c) => extendedTubeEnergy(a,b,c,Gc,delta,Ge,beta);
-
-      const dWdl1 = (W(l1+eps1,l2,l3) - W(l1-eps1,l2,l3)) / (2*eps1);
-      const dWdl2 = (W(l1,l2+eps2,l3) - W(l1,l2-eps2,l3)) / (2*eps2);
-      if(!Number.isFinite(dWdl1) || !Number.isFinite(dWdl2)) return Number.POSITIVE_INFINITY;
-
-      const p = l2 * dWdl2;
-      return dWdl1 - p/l1;
-    }
-
-    // -------------------------
-    // Invariants & energies (for Mullins W0)
-    // -------------------------
-    function uniaxialInvariants(lambda){
-      const l1 = lambda;
-      const l2 = 1/Math.sqrt(lambda);
-      const l3 = l2;
-      const I1 = l1*l1 + l2*l2 + l3*l3;
-      const I2 = (l1*l1)*(l2*l2) + (l2*l2)*(l3*l3) + (l3*l3)*(l1*l1);
-      return { l1, l2, l3, I1, I2 };
-    }
-
-    function W0_neo(lambda, C10){
-      const { I1 } = uniaxialInvariants(lambda);
-      return C10 * (I1 - 3);
-    }
-    function W0_mooney2(lambda, C10, C01){
-      const { I1, I2 } = uniaxialInvariants(lambda);
-      return C10*(I1 - 3) + C01*(I2 - 3);
-    }
-    function W0_mooney3(lambda, C10, C01, C11){
-      const { I1, I2 } = uniaxialInvariants(lambda);
-      const A=(I1-3), B=(I2-3);
-      return C10*A + C01*B + C11*A*B;
-    }
-    function W0_ogden(lambda, mus, alphas){
-      const { l1, l2, l3 } = uniaxialInvariants(lambda);
-      let W = 0;
-      for(let i=0;i<mus.length;i++){
-        const mu = mus[i], a = alphas[i];
-        W += (mu/a) * (Math.pow(l1,a) + Math.pow(l2,a) + Math.pow(l3,a) - 3);
-      }
-      return W;
-    }
-    function W0_arruda(lambda, mu, lm){
-      const { I1 } = uniaxialInvariants(lambda);
-      const c1 = 1/(5*lm*lm);
-      const c2 = 11/(175*Math.pow(lm,4));
-      const c3 = 19/(675*Math.pow(lm,6));
-      const c4 = 519/(67375*Math.pow(lm,8));
-      const term =
-        (I1 - 3) +
-        c1 * ((I1*I1 - 9) / 2) +
-        c2 * ((Math.pow(I1,3) - 27) / 3) +
-        c3 * ((Math.pow(I1,4) - 81) / 4) +
-        c4 * ((Math.pow(I1,5) - 243) / 5);
-      return 0.5 * mu * term;
-    }
-    function W0_exttube(lambda, Gc, delta, Ge, beta){
-      const { l1, l2, l3 } = uniaxialInvariants(lambda);
-      return extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta);
-    }
-
-    function virginEnergyW0(modelKey, lambda, params){
-      switch(modelKey){
-        case 'neo':     return W0_neo(lambda, params[0]);
-        case 'mooney2': return W0_mooney2(lambda, params[0], params[1]);
-        case 'mooney3': return W0_mooney3(lambda, params[0], params[1], params[2]);
-        case 'ogden2':  return W0_ogden(lambda, [params[0], params[2]], [params[1], params[3]]);
-        case 'ogden3':  return W0_ogden(lambda, [params[0], params[2], params[4]], [params[1], params[3], params[5]]);
-        case 'arruda':  return W0_arruda(lambda, params[0], params[1]);
-        case 'exttube': return W0_exttube(lambda, params[0], params[1], params[2], params[3]);
-        default:        return null;
-      }
-    }
-
-    // -------------------------
-    // Mullins (Ogden–Roxburgh-like)
-    // -------------------------
-    function mullinsParams(){
-      const r = parseFloat(document.getElementById('mullins_r')?.value ?? '1.5');
-      const m = parseFloat(document.getElementById('mullins_m')?.value ?? '1000000');
-      const beta = parseFloat(document.getElementById('mullins_beta')?.value ?? '0.2');
-      return { r, m, beta };
-    }
-
-    function erfSafe(x){
-      if (window.math && typeof math.erf === 'function') return math.erf(x);
-      const sign = x < 0 ? -1 : 1;
-      x = Math.abs(x);
-      const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
-      const t = 1/(1+p*x);
-      const y = 1 - (((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
-      return sign*y;
-    }
-
-    function mullinsEta(W0, Wm, r, m, beta){
-      if (W0 >= Wm - 1e-14) return 1.0;
-      const denom = (m + beta*Wm);
-      const arg = (Wm - W0) / Math.max(1e-12, denom);
-      const eta = 1.0 - (1.0/Math.max(1e-12, r)) * erfSafe(arg);
-      return clamp01(eta);
-    }
-
-    function applyMullinsToStressSeries(modelKey, strainPts, stressVirgin, params){
-      const { r, m, beta } = mullinsParams();
-      let Wm = -Infinity;
-      const out = new Array(stressVirgin.length);
-
-      for(let i=0;i<strainPts.length;i++){
-        const lambda = Math.max(1e-12, 1 + strainPts[i].x);
-        const W0 = virginEnergyW0(modelKey, lambda, params);
-
-        if(W0 === null || !Number.isFinite(W0)){
-          out[i] = stressVirgin[i];
-          continue;
-        }
-        if(W0 > Wm) Wm = W0;
-
-        let eta = 1.0;
-        if(W0 < Wm - 1e-12){
-          eta = mullinsEta(W0, Wm, r, m, beta);
-        }
-        out[i] = eta * stressVirgin[i];
-      }
-      return { stress: out };
-    }
-
-    // -------------------------
-    // BB helper
-    // -------------------------
-    function invLangevinPade(x){
-      const ax = Math.abs(x);
-      if(ax < 0.84136){
-        return 1.31446 * Math.tan(1.58986 * x) + 0.91209 * x;
-      }
-      const s = (x >= 0) ? 1 : -1;
-      const denom = (s - x);
-      return 1 / (denom === 0 ? 1e-12 : denom);
-    }
-    function jChainUniax(lambda){
-      return Math.sqrt((lambda*lambda + 2.0/lambda)/3.0);
-    }
-    function chainNominalStress_AB_like(lambda, mu, jlock){
-      lambda = Math.max(1e-8, lambda);
-      mu = Math.max(0, mu);
-      jlock = Math.max(1.01, jlock);
-      const j = jChainUniax(lambda);
-      const x = Math.min(0.999999, j / jlock);
-      const invL = invLangevinPade(x);
-      const base = (lambda - Math.pow(lambda, -2));
-      return (mu/3.0) * (base / Math.max(1e-12, j)) * invL;
-    }
-    function bbPredictSeries(strainPts, params){
-      const muA = Math.max(0, params[0]);
-      const jA  = Math.max(1.01, params[1]);
-      const muB = Math.max(0, params[2]);
-      const jB  = Math.max(1.01, params[3]);
-      const gamma0 = Math.max(0, params[4]);
-      const Cexp = params[5];
-      const mexp = Math.max(0, params[6]);
-
-      const rate = Math.max(1e-9, parseFloat(document.getElementById('bbRate')?.value || "0.01"));
-      const substeps = Math.max(1, parseInt(document.getElementById('bbSubsteps')?.value || "10", 10));
-
-      let q = 0.0;
-      const preds = [];
-      let prevE = null;
-
-      for(const p of strainPts){
-        const e = p.x;
-        const lambda = Math.max(1e-8, 1 + e);
-
-        if(prevE !== null){
-          const de = e - prevE;
-          const dt = Math.abs(de) / rate;
-          const dtSub = dt / substeps;
-
-          for(let k=0;k<substeps;k++){
-            const lambdaV = Math.max(1e-8, 1 + q);
-            const lambdaE = lambda / lambdaV;
-
-            const sigB = chainNominalStress_AB_like(lambdaE, muB, jB);
-            const tau = Math.sqrt(2/3) * Math.abs(sigB);
-
-            const jv = jChainUniax(lambdaV);
-            const drive = Math.max(0, jv - 1);
-
-            const gammaDot = gamma0 * Math.pow(drive, Cexp) * Math.pow(tau, mexp);
-            const sign = (sigB >= 0) ? 1 : -1;
-            const qdot = lambdaV * gammaDot * sign;
-
-            q += qdot * dtSub;
-            q = Math.max(-0.9, q);
-          }
+        if(strict){
+          if(target === 'tension' && x < 0) continue;
+          if(target === 'compression' && x > 0) continue;
         }
 
-        const sigA = chainNominalStress_AB_like(lambda, muA, jA);
-        const lambdaV_now = Math.max(1e-8, 1 + q);
-        const lambdaE_now = lambda / lambdaV_now;
-        const sigB_now = chainNominalStress_AB_like(lambdaE_now, muB, jB);
-
-        preds.push(sigA + sigB_now);
-        prevE = e;
+        addRowTo(tbody, x, y);
+        added++;
       }
-      return preds;
-    }
 
-    // -------------------------
-    // Models
-    // -------------------------
-    const MODELS = {
-      neo: {
-        params: ['C10'],
-        initial: [0.5],
-        pathDependent: false,
-        solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2))
-      },
-      mooney2: {
-        params: ['C10','C01'],
-        initial: [0.4, 0.1],
-        pathDependent: false,
-        solve: (L, [C10, C01]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L)
-      },
-      mooney3: {
-        params: ['C10','C01','C11'],
-        initial: [0.4, 0.1, 0.01],
-        pathDependent: false,
-        solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3))
-      },
-      ogden2: {
-        params: ['mu1','alpha1','mu2','alpha2'],
-        initial: [1.0, 2.0, -0.1, -2.0],
-        pathDependent: false,
-        solve: (L, [m1,a1,m2,a2]) =>
-          (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
-          (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1)))
-      },
-      ogden3: {
-        params: ['mu1','alpha1','mu2','alpha2','mu3','alpha3'],
-        initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0],
-        pathDependent: false,
-        solve: (L, [m1,a1,m2,a2,m3,a3]) =>
-          (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
-          (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1))) +
-          (m3*(Math.pow(L,a3-1) - Math.pow(L,-0.5*a3-1)))
-      },
-      arruda: {
-        params: ['mu','lambda_m'],
-        initial: [0.5, 5.0],
-        pathDependent: false,
-        solve: (L, [mu, lm]) => {
-          const I1 = L*L + 2/L;
-          const x2 = I1 / (3*lm*lm);
-          const poly =
-            1 +
-            x2/10 +
-            11*Math.pow(x2,2)/525 +
-            19*Math.pow(x2,3)/3500;
-          return mu * (L - 1/(L*L)) * poly;
-        }
-      },
-      exttube: {
-        params: ['Gc','delta','Ge','beta'],
-        initial: [0.5, 0.10, 0.2, 0.7],
-        pathDependent: false,
-        solve: (L, [Gc, delta, Ge, beta]) => extendedTubeNominalStress(L, Gc, delta, Ge, beta)
-      },
-      bb: {
-        params: ['muA','jA_lock','muB','jB_lock','gamma0','C','m'],
-        initial: [0.5, 2.5, 0.5, 2.5, 0.01, -1.0, 4.0],
-        pathDependent: true,
-        predictSeries: (pts, params) => bbPredictSeries(pts, params)
-      }
+      tablesToTextareas();
+      alert(`Imported ${added} rows into ${target}. Existing other dataset preserved.`);
     };
 
-    // -------------------------
-    // Prediction
-    // -------------------------
-    function predictStressSeries(modelKey, params){
-      const model = MODELS[modelKey];
-      const mullinsOn = document.getElementById('enableMullins')?.checked;
+    reader.readAsArrayBuffer(file);
+    ev.target.value = '';
+  }
 
-      if(model.pathDependent){
-        return { stress: model.predictSeries(cleanData, params) };
-      }
+  function clearAllData(){
+    if(!confirm("Clear ALL tension and compression data?")) return;
+    clearTable('dataBodyTension');
+    clearTable('dataBodyCompression');
+    document.getElementById('uniaxialTensionInput').value = '';
+    document.getElementById('uniaxialCompressionInput').value = '';
+    rawData = [];
+    cleanData = [];
+    if(preChart) { preChart.destroy(); preChart = null; }
+    if(chart) { chart.destroy(); chart = null; }
+    const statsDiv = document.getElementById('summaryStats');
+    const dbgDiv = document.getElementById('ingestDebug');
+    if(statsDiv) statsDiv.innerHTML = '';
+    if(dbgDiv) dbgDiv.innerHTML = '';
+    // Clearing all means no sample shown
+    sampleLoaded = false;
+    userImportedOnce = false;
+  }
 
-      const sig0 = cleanData.map(p => model.solve(1+p.x, params));
+  // -------------------------
+  // Samples (when loaded, we mark sampleLoaded=true and reset import flag)
+  // -------------------------
+  function loadSample(type){
+    const rubberTension =
+      "0.00 0.00\n0.10 0.35\n0.30 0.95\n0.60 1.80\n1.00 3.20\n1.50 5.10\n2.20 8.50\n3.00 15.00";
 
-      if(mullinsOn){
-        const testW = virginEnergyW0(modelKey, Math.max(1e-12, 1+cleanData[0].x), params);
-        if(testW !== null){
-          const out = applyMullinsToStressSeries(modelKey, cleanData, sig0, params);
-          return { stress: out.stress };
-        }
-      }
-      return { stress: sig0 };
+    const rubberCompression =
+      "-0.02 -0.05\n-0.05 -0.14\n-0.10 -0.30\n-0.20 -0.70\n-0.35 -1.35\n-0.50 -2.30\n-0.60 -3.10\n-0.70 -4.25";
+
+    const softTension =
+      "0.00 0.00\n0.02 0.01\n0.05 0.04\n0.10 0.15\n0.15 0.40\n0.20 0.90\n0.25 1.80\n0.30 3.50";
+    const softCompression =
+      "-0.01 -0.005\n-0.02 -0.015\n-0.04 -0.040\n-0.06 -0.080\n-0.08 -0.130\n-0.10 -0.200\n-0.12 -0.290\n-0.15 -0.420";
+
+    if(type==='rubber_tension'){
+      document.getElementById('uniaxialTensionInput').value = rubberTension;
+      textareaToTableById('uniaxialTensionInput','dataBodyTension');
+      tablesToTextareas();
+    } else if(type==='rubber_compression'){
+      document.getElementById('uniaxialCompressionInput').value = rubberCompression;
+      textareaToTableById('uniaxialCompressionInput','dataBodyCompression');
+      tablesToTextareas();
+    } else if(type==='rubber_both'){
+      document.getElementById('uniaxialTensionInput').value = rubberTension;
+      document.getElementById('uniaxialCompressionInput').value = rubberCompression;
+      textareaToTableById('uniaxialTensionInput','dataBodyTension');
+      textareaToTableById('uniaxialCompressionInput','dataBodyCompression');
+      tablesToTextareas();
+    } else if(type==='soft_both'){
+      document.getElementById('uniaxialTensionInput').value = softTension;
+      document.getElementById('uniaxialCompressionInput').value = softCompression;
+      textareaToTableById('uniaxialTensionInput','dataBodyTension');
+      textareaToTableById('uniaxialCompressionInput','dataBodyCompression');
+      tablesToTextareas();
+    } else {
+      // default
+      document.getElementById('uniaxialTensionInput').value = rubberTension;
+      document.getElementById('uniaxialCompressionInput').value = rubberCompression;
+      textareaToTableById('uniaxialTensionInput','dataBodyTension');
+      textareaToTableById('uniaxialCompressionInput','dataBodyCompression');
+      tablesToTextareas();
     }
 
-    // -------------------------
-    // Closed-form LS for neo/mooney2/mooney3
-    // -------------------------
-    function fitLinearHyperelastic(modelKey, pts){
-      const n = pts.length;
-      if(n < 3) return null;
-      if(!(modelKey === 'neo' || modelKey === 'mooney2' || modelKey === 'mooney3')) return null;
+    // Option B: sample is now active again, so next import should clear it once
+    sampleLoaded = true;
+    userImportedOnce = false;
+  }
 
-      const ridge = 1e-12;
-      const rows = [];
-      const b = [];
+  // -------------------------
+  // Parsing (with src tag)
+  // -------------------------
+  function parseRawFromTextareaId(textareaId, srcTag, keepOrder=false){
+    const input = document.getElementById(textareaId)?.value || '';
+    const lines = input.split('\n')
+      .map(l=>l.trim().split(/[\s,;]+/).filter(Boolean))
+      .filter(p=>p.length>=2);
 
-      for(const p of pts){
-        const y = p.y;
-        const L = Math.max(1e-12, 1 + p.x);
-        const basis = (L - Math.pow(L, -2));
-        const f1 = 2*basis;
+    let pts = lines
+      .map(p=>({x:parseFloat(p[0]), y:parseFloat(p[1]), src: srcTag}))
+      .filter(p=>Number.isFinite(p.x) && Number.isFinite(p.y));
 
-        if(modelKey === 'neo'){
-          rows.push([f1]); b.push(y);
-        } else if(modelKey === 'mooney2'){
-          rows.push([f1, f1/L]); b.push(y);
-        } else if(modelKey === 'mooney3'){
-          const f3 = f1*(L*L + 2/L - 3);
-          rows.push([f1, f1/L, f3]); b.push(y);
-        }
-      }
+    if(!keepOrder) pts.sort((a,b)=>a.x-b.x);
+    return pts;
+  }
 
-      const m = rows[0].length;
-      const ATA = Array.from({length:m}, ()=>Array(m).fill(0));
-      const ATb = Array(m).fill(0);
+  // -------------------------
+  // Preprocessing (preserve src)
+  // -------------------------
+  function applyPreprocessing(pts, allowBinning=true){
+    let out = pts.map(p=>({x:p.x, y:p.y, src:p.src}));
 
-      for(let i=0;i<n;i++){
-        const r = rows[i];
-        for(let a=0;a<m;a++){
-          ATb[a] += r[a]*b[i];
-          for(let c=0;c<m;c++) ATA[a][c] += r[a]*r[c];
-        }
-      }
-      for(let a=0;a<m;a++) ATA[a][a] += ridge;
+    const zeroBox = document.getElementById('doZero2');
+    const binInput = document.getElementById('groupThresh2');
+    const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
 
-      const M = ATA.map((row,i)=>row.concat([ATb[i]]));
-      for(let k=0;k<m;k++){
-        let piv = k;
-        for(let i=k+1;i<m;i++) if(Math.abs(M[i][k]) > Math.abs(M[piv][k])) piv = i;
-        [M[k], M[piv]] = [M[piv], M[k]];
+    // Guard: lambda = 1 + e must remain > 0
+    out = out.filter(p => (1 + p.x) > 1e-12);
 
-        const d = M[k][k] || 1e-30;
-        for(let j=k;j<m+1;j++) M[k][j] /= d;
-
-        for(let i=0;i<m;i++){
-          if(i===k) continue;
-          const f = M[i][k];
-          for(let j=k;j<m+1;j++) M[i][j] -= f*M[k][j];
-        }
-      }
-      const psol = M.map(r=>r[m]);
-      if(modelKey === 'neo') return [psol[0]];
-      if(modelKey === 'mooney2') return [psol[0], psol[1]];
-      if(modelKey === 'mooney3') return [psol[0], psol[1], psol[2]];
-      return null;
+    // Auto-zero (global) – for mixed T+C you usually want this OFF
+    if(zeroBox && zeroBox.checked && out.length>0){
+      const ox = out[0].x, oy = out[0].y;
+      out = out.map(p=>({x:p.x-ox, y:p.y-oy, src:p.src}));
     }
 
-    // -------------------------
-    // Constraints
-    // -------------------------
-    function enforceConstraints(modelKey, params){
-      const model = MODELS[modelKey];
-      const out = [...params];
-
-      if(modelKey==='exttube'){
-        for(let i=0;i<out.length;i++){
-          const name = model.params[i];
-          if(name==='beta') out[i]=clamp(out[i], 1e-6, 1.0);
-          if(name==='delta') out[i]=Math.max(0, out[i]);
-          if(name==='Gc' || name==='Ge') out[i]=Math.max(0, out[i]);
-        }
-      }
-      if(modelKey==='bb'){
-        for(let i=0;i<out.length;i++){
-          const name = model.params[i];
-          if(name.includes('mu')) out[i]=Math.max(0, out[i]);
-          if(name.includes('lock')) out[i]=Math.max(1.01, out[i]);
-          if(name==='gamma0') out[i]=Math.max(0, out[i]);
-          if(name==='m') out[i]=Math.max(0, out[i]);
-        }
-      }
-      if(modelKey==='arruda'){
-        out[1] = Math.max(1.05, out[1]);
-        out[0] = Math.max(0, out[0]);
-      }
-      return out;
+    if(stressIsTrue){
+      out = out.map(p=>{
+        const L = 1 + p.x;
+        if(!Number.isFinite(L) || L <= 1e-12) return {x:p.x, y:NaN, src:p.src};
+        return {x:p.x, y:p.y / L, src:p.src};
+      }).filter(p=>Number.isFinite(p.y));
     }
 
-    // -------------------------
-    // Objective
-    // -------------------------
-    function calculateError(modelKey, params){
+    if(!allowBinning) return out;
+
+    const thresh = parseFloat(binInput ? binInput.value : '0.005');
+    if(Number.isFinite(thresh) && thresh>0 && out.length>0){
+      // Bin within same src so tension/compression do not mix
+      const groups = {T:[], C:[]};
+      for(const p of out){ (p.src === 'C' ? groups.C : groups.T).push(p); }
+      groups.T.sort((a,b)=>a.x-b.x); groups.C.sort((a,b)=>a.x-b.x);
+
+      function binOne(list){
+        if(list.length===0) return [];
+        let grouped=[], current=[list[0]];
+        for(let i=1;i<list.length;i++){
+          if(list[i].x - current[0].x <= thresh) current.push(list[i]);
+          else { grouped.push({x:avg(current,'x'), y:avg(current,'y'), src: current[0].src}); current=[list[i]]; }
+        }
+        grouped.push({x:avg(current,'x'), y:avg(current,'y'), src: current[0].src});
+        return grouped;
+      }
+      out = binOne(groups.T).concat(binOne(groups.C));
+      out.sort((a,b)=>a.x-b.x);
+    }
+    return out;
+  }
+
+  function getOptimizationData(){
+    const modelKey = document.getElementById('modelSelect')?.value || 'mooney2';
+    const mullinsOn = document.getElementById('enableMullins')?.checked;
+    const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
+
+    const useT = document.getElementById('includeTension')?.checked ?? true;
+    const useC = document.getElementById('includeCompression')?.checked ?? true;
+
+    const rawT = useT ? parseRawFromTextareaId('uniaxialTensionInput','T', keepOrder) : [];
+    const rawC = useC ? parseRawFromTextareaId('uniaxialCompressionInput','C', keepOrder) : [];
+
+    const allowBinning = !keepOrder;
+
+    const cleanT = applyPreprocessing(rawT, allowBinning);
+    const cleanC = applyPreprocessing(rawC, allowBinning);
+
+    const combined = cleanT.concat(cleanC);
+    if(!keepOrder) combined.sort((a,b)=>a.x-b.x);
+    return combined;
+  }
+
+  function renderIngestDebug(rawPts, cleanedPts){
+    const div = document.getElementById('ingestDebug');
+    if(!div) return;
+
+    const stats = (pts)=>{
+      if(!pts || pts.length===0) return {n:0, xmin:0, xmax:0, ymin:0, ymax:0};
+      const xs = pts.map(p=>p.x), ys = pts.map(p=>p.y);
+      return { n:pts.length, xmin:Math.min(...xs), xmax:Math.max(...xs), ymin:Math.min(...ys), ymax:Math.max(...ys) };
+    };
+
+    const s0 = stats(rawPts), s1 = stats(cleanedPts);
+    const stressIsTrue = document.getElementById('stressIsTrue')?.checked;
+    const modelKey = document.getElementById('modelSelect')?.value || 'mooney2';
+    const keepOrder = !!(document.getElementById('enableMullins')?.checked) || (MODELS[modelKey]?.pathDependent === true);
+
+    const wT = parseFloat(document.getElementById('wTension')?.value ?? '1.0');
+    const wC = parseFloat(document.getElementById('wCompression')?.value ?? '1.0');
+
+    div.innerHTML =
+      `RAW(all): n=${s0.n}  ε[min,max]=[${s0.xmin.toExponential(3)}, ${s0.xmax.toExponential(3)}]  ` +
+      `s[min,max]=[${s0.ymin.toExponential(3)}, ${s0.ymax.toExponential(3)}]<br>` +
+      `CLEAN(enabled): n=${s1.n}  ε[min,max]=[${s1.xmin.toExponential(3)}, ${s1.xmax.toExponential(3)}]  ` +
+      `s[min,max]=[${s1.ymin.toExponential(3)}, ${s1.ymax.toExponential(3)}]<br>` +
+      `Flags: keepOrder=${keepOrder}  binning=${!keepOrder}  true→nominal=${!!stressIsTrue}  ` +
+      `IncludeT=${document.getElementById('includeTension')?.checked ? 'Yes':'No'}(w=${wT})  ` +
+      `IncludeC=${document.getElementById('includeCompression')?.checked ? 'Yes':'No'}(w=${wC})`;
+  }
+
+  function renderPreChart(datasets){
+    const ctx = document.getElementById('preChart')?.getContext('2d'); if(!ctx) return;
+    if(preChart) preChart.destroy();
+    preChart = new Chart(ctx, {
+      type:'scatter',
+      data:{ datasets: datasets.map(d=>({
+        label: d.label,
+        data: d.data,
+        borderColor: d.color,
+        backgroundColor: d.color,
+        pointRadius: d.pointRadius ?? 3,
+        showLine: false
+      }))},
+      options:{
+        responsive:true, maintainAspectRatio:false, animation:false,
+        scales:{
+          x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+          y:{ title:{display:true, text:'Stress (input or nominal)'} }
+        }
+      }
+    });
+  }
+
+  function processAndRender(){
+    tablesToTextareas();
+    syncIncludeUI('input');
+
+    const modelKey = document.getElementById('modelSelect')?.value || 'mooney2';
+    const mullinsOn = document.getElementById('enableMullins')?.checked;
+    const keepOrder = !!mullinsOn || (MODELS[modelKey]?.pathDependent === true);
+    const allowBinning = !keepOrder;
+
+    const rawT = parseRawFromTextareaId('uniaxialTensionInput','T', keepOrder);
+    const rawC = parseRawFromTextareaId('uniaxialCompressionInput','C', keepOrder);
+
+    const cleanT = applyPreprocessing(rawT, allowBinning);
+    const cleanC = applyPreprocessing(rawC, allowBinning);
+
+    rawData = rawT.concat(rawC);
+    if(!keepOrder) rawData.sort((a,b)=>a.x-b.x);
+
+    cleanData = getOptimizationData();
+
+    const statsDiv = document.getElementById('summaryStats');
+    if(statsDiv){
+      statsDiv.innerHTML =
+        `Points (raw): T=${rawT.length}, C=${rawC.length}. ` +
+        `Points (cleaned, enabled): ${cleanData.length}. ` +
+        `Enabled: T=${document.getElementById('includeTension')?.checked ? 'Yes':'No'}, ` +
+        `C=${document.getElementById('includeCompression')?.checked ? 'Yes':'No'}.`;
+    }
+
+    renderIngestDebug(rawData, cleanData);
+
+    renderPreChart([
+      {label:'Raw Tension', data:rawT, color:'#CBD5E1', pointRadius:3},
+      {label:'Raw Compression', data:rawC, color:'#E5E7EB', pointRadius:3},
+      {label:'Clean Tension', data:cleanT, color:'#3B82F6', pointRadius:5},
+      {label:'Clean Compression', data:cleanC, color:'#EF4444', pointRadius:5}
+    ]);
+  }
+
+  // -------------------------
+  // Extended Tube
+  // -------------------------
+  function extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta){
+    const J = l1*l2*l3;
+    const Jm23 = Math.pow(J, -2/3);
+    const D = Jm23 * (l1*l1 + l2*l2 + l3*l3);
+
+    const x = (delta*delta) * (D - 3);
+    const oneMinusX = 1 - x;
+    if(oneMinusX <= 1e-12) return Number.POSITIVE_INFINITY;
+
+    const gamma = (1 - delta*delta) * (D - 3) / oneMinusX;
+    const Wc = 0.5 * Gc * (gamma + Math.log(oneMinusX));
+
+    const invb2 = 1/(beta*beta);
+    const We = 2 * Ge * invb2 *
+      (Math.pow(l1, -beta) + Math.pow(l2, -beta) + Math.pow(l3, -beta) - 3);
+
+    return Wc + We;
+  }
+
+  function extendedTubeNominalStress(lambda, Gc, delta, Ge, beta){
+    if(!Number.isFinite(lambda) || lambda <= 0) return Number.NaN;
+
+    Gc = Math.max(0, Gc);
+    Ge = Math.max(0, Ge);
+    delta = Math.max(0, delta);
+    beta = clamp(beta, 1e-6, 1.0);
+
+    const l1 = lambda;
+    const l2 = 1/Math.sqrt(lambda);
+    const l3 = l2;
+
+    const eps1 = 1e-6 * Math.max(1, Math.abs(l1));
+    const eps2 = 1e-6 * Math.max(1, Math.abs(l2));
+
+    const W = (a,b,c) => extendedTubeEnergy(a,b,c,Gc,delta,Ge,beta);
+
+    const dWdl1 = (W(l1+eps1,l2,l3) - W(l1-eps1,l2,l3)) / (2*eps1);
+    const dWdl2 = (W(l1,l2+eps2,l3) - W(l1,l2-eps2,l3)) / (2*eps2);
+    if(!Number.isFinite(dWdl1) || !Number.isFinite(dWdl2)) return Number.POSITIVE_INFINITY;
+
+    const p = l2 * dWdl2;
+    return dWdl1 - p/l1;
+  }
+
+  // -------------------------
+  // Invariants & energies (for Mullins W0)
+  // -------------------------
+  function uniaxialInvariants(lambda){
+    const l1 = lambda;
+    const l2 = 1/Math.sqrt(lambda);
+    const l3 = l2;
+    const I1 = l1*l1 + l2*l2 + l3*l3;
+    const I2 = (l1*l1)*(l2*l2) + (l2*l2)*(l3*l3) + (l3*l3)*(l1*l1);
+    return { l1, l2, l3, I1, I2 };
+  }
+
+  function W0_neo(lambda, C10){
+    const { I1 } = uniaxialInvariants(lambda);
+    return C10 * (I1 - 3);
+  }
+  function W0_mooney2(lambda, C10, C01){
+    const { I1, I2 } = uniaxialInvariants(lambda);
+    return C10*(I1 - 3) + C01*(I2 - 3);
+  }
+  function W0_mooney3(lambda, C10, C01, C11){
+    const { I1, I2 } = uniaxialInvariants(lambda);
+    const A=(I1-3), B=(I2-3);
+    return C10*A + C01*B + C11*A*B;
+  }
+  function W0_ogden(lambda, mus, alphas){
+    const { l1, l2, l3 } = uniaxialInvariants(lambda);
+    let W = 0;
+    for(let i=0;i<mus.length;i++){
+      const mu = mus[i], a = alphas[i];
+      W += (mu/a) * (Math.pow(l1,a) + Math.pow(l2,a) + Math.pow(l3,a) - 3);
+    }
+    return W;
+  }
+  function W0_arruda(lambda, mu, lm){
+    const { I1 } = uniaxialInvariants(lambda);
+    const c1 = 1/(5*lm*lm);
+    const c2 = 11/(175*Math.pow(lm,4));
+    const c3 = 19/(675*Math.pow(lm,6));
+    const c4 = 519/(67375*Math.pow(lm,8));
+    const term =
+      (I1 - 3) +
+      c1 * ((I1*I1 - 9) / 2) +
+      c2 * ((Math.pow(I1,3) - 27) / 3) +
+      c3 * ((Math.pow(I1,4) - 81) / 4) +
+      c4 * ((Math.pow(I1,5) - 243) / 5);
+    return 0.5 * mu * term;
+  }
+  function W0_exttube(lambda, Gc, delta, Ge, beta){
+    const { l1, l2, l3 } = uniaxialInvariants(lambda);
+    return extendedTubeEnergy(l1, l2, l3, Gc, delta, Ge, beta);
+  }
+
+  function virginEnergyW0(modelKey, lambda, params){
+    switch(modelKey){
+      case 'neo':     return W0_neo(lambda, params[0]);
+      case 'mooney2': return W0_mooney2(lambda, params[0], params[1]);
+      case 'mooney3': return W0_mooney3(lambda, params[0], params[1], params[2]);
+      case 'ogden2':  return W0_ogden(lambda, [params[0], params[2]], [params[1], params[3]]);
+      case 'ogden3':  return W0_ogden(lambda, [params[0], params[2], params[4]], [params[1], params[3], params[5]]);
+      case 'arruda':  return W0_arruda(lambda, params[0], params[1]);
+      case 'exttube': return W0_exttube(lambda, params[0], params[1], params[2], params[3]);
+      default:        return null;
+    }
+  }
+
+  // -------------------------
+  // Mullins (Ogden–Roxburgh-like)
+  // -------------------------
+  function mullinsParams(){
+    const r = parseFloat(document.getElementById('mullins_r')?.value ?? '1.5');
+    const m = parseFloat(document.getElementById('mullins_m')?.value ?? '1000000');
+    const beta = parseFloat(document.getElementById('mullins_beta')?.value ?? '0.2');
+    return { r, m, beta };
+  }
+
+  function erfSafe(x){
+    if (window.math && typeof math.erf === 'function') return math.erf(x);
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+    const t = 1/(1+p*x);
+    const y = 1 - (((((a5*t+a4)*t+a3)*t+a2)*t+a1)*t)*Math.exp(-x*x);
+    return sign*y;
+  }
+
+  function mullinsEta(W0, Wm, r, m, beta){
+    if (W0 >= Wm - 1e-14) return 1.0;
+    const denom = (m + beta*Wm);
+    const arg = (Wm - W0) / Math.max(1e-12, denom);
+    const eta = 1.0 - (1.0/Math.max(1e-12, r)) * erfSafe(arg);
+    return clamp01(eta);
+  }
+
+  function applyMullinsToStressSeries(modelKey, strainPts, stressVirgin, params){
+    const { r, m, beta } = mullinsParams();
+    let Wm = -Infinity;
+    const out = new Array(stressVirgin.length);
+
+    for(let i=0;i<strainPts.length;i++){
+      const lambda = Math.max(1e-12, 1 + strainPts[i].x);
+      const W0 = virginEnergyW0(modelKey, lambda, params);
+
+      if(W0 === null || !Number.isFinite(W0)){
+        out[i] = stressVirgin[i];
+        continue;
+      }
+      if(W0 > Wm) Wm = W0;
+
+      let eta = 1.0;
+      if(W0 < Wm - 1e-12){
+        eta = mullinsEta(W0, Wm, r, m, beta);
+      }
+      out[i] = eta * stressVirgin[i];
+    }
+    return { stress: out };
+  }
+
+  // -------------------------
+  // BB helper
+  // -------------------------
+  function invLangevinPade(x){
+    const ax = Math.abs(x);
+    if(ax < 0.84136){
+      return 1.31446 * Math.tan(1.58986 * x) + 0.91209 * x;
+    }
+    const s = (x >= 0) ? 1 : -1;
+    const denom = (s - x);
+    return 1 / (denom === 0 ? 1e-12 : denom);
+  }
+  function jChainUniax(lambda){
+    return Math.sqrt((lambda*lambda + 2.0/lambda)/3.0);
+  }
+  function chainNominalStress_AB_like(lambda, mu, jlock){
+    lambda = Math.max(1e-8, lambda);
+    mu = Math.max(0, mu);
+    jlock = Math.max(1.01, jlock);
+    const j = jChainUniax(lambda);
+    const x = Math.min(0.999999, j / jlock);
+    const invL = invLangevinPade(x);
+    const base = (lambda - Math.pow(lambda, -2));
+    return (mu/3.0) * (base / Math.max(1e-12, j)) * invL;
+  }
+  function bbPredictSeries(strainPts, params){
+    const muA = Math.max(0, params[0]);
+    const jA  = Math.max(1.01, params[1]);
+    const muB = Math.max(0, params[2]);
+    const jB  = Math.max(1.01, params[3]);
+    const gamma0 = Math.max(0, params[4]);
+    const Cexp = params[5];
+    const mexp = Math.max(0, params[6]);
+
+    const rate = Math.max(1e-9, parseFloat(document.getElementById('bbRate')?.value || "0.01"));
+    const substeps = Math.max(1, parseInt(document.getElementById('bbSubsteps')?.value || "10", 10));
+
+    let q = 0.0;
+    const preds = [];
+    let prevE = null;
+
+    for(const p of strainPts){
+      const e = p.x;
+      const lambda = Math.max(1e-8, 1 + e);
+
+      if(prevE !== null){
+        const de = e - prevE;
+        const dt = Math.abs(de) / rate;
+        const dtSub = dt / substeps;
+
+        for(let k=0;k<substeps;k++){
+          const lambdaV = Math.max(1e-8, 1 + q);
+          const lambdaE = lambda / lambdaV;
+
+          const sigB = chainNominalStress_AB_like(lambdaE, muB, jB);
+          const tau = Math.sqrt(2/3) * Math.abs(sigB);
+
+          const jv = jChainUniax(lambdaV);
+          const drive = Math.max(0, jv - 1);
+
+          const gammaDot = gamma0 * Math.pow(drive, Cexp) * Math.pow(tau, mexp);
+          const sign = (sigB >= 0) ? 1 : -1;
+          const qdot = lambdaV * gammaDot * sign;
+
+          q += qdot * dtSub;
+          q = Math.max(-0.9, q);
+        }
+      }
+
+      const sigA = chainNominalStress_AB_like(lambda, muA, jA);
+      const lambdaV_now = Math.max(1e-8, 1 + q);
+      const lambdaE_now = lambda / lambdaV_now;
+      const sigB_now = chainNominalStress_AB_like(lambdaE_now, muB, jB);
+
+      preds.push(sigA + sigB_now);
+      prevE = e;
+    }
+    return preds;
+  }
+
+  // -------------------------
+  // Models
+  // -------------------------
+  const MODELS = {
+    neo: {
+      params: ['C10'],
+      initial: [0.5],
+      pathDependent: false,
+      solve: (L, [C10]) => 2 * C10 * (L - Math.pow(L, -2))
+    },
+    mooney2: {
+      params: ['C10','C01'],
+      initial: [0.4, 0.1],
+      pathDependent: false,
+      solve: (L, [C10, C01]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L)
+    },
+    mooney3: {
+      params: ['C10','C01','C11'],
+      initial: [0.4, 0.1, 0.01],
+      pathDependent: false,
+      solve: (L, [C10, C01, C11]) => 2*(L - Math.pow(L, -2))*(C10 + C01/L + C11*(L*L + 2/L - 3))
+    },
+    ogden2: {
+      params: ['mu1','alpha1','mu2','alpha2'],
+      initial: [1.0, 2.0, -0.1, -2.0],
+      pathDependent: false,
+      solve: (L, [m1,a1,m2,a2]) =>
+        (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
+        (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1)))
+    },
+    ogden3: {
+      params: ['mu1','alpha1','mu2','alpha2','mu3','alpha3'],
+      initial: [1.0, 1.5, 0.5, 4.0, -0.1, -2.0],
+      pathDependent: false,
+      solve: (L, [m1,a1,m2,a2,m3,a3]) =>
+        (m1*(Math.pow(L,a1-1) - Math.pow(L,-0.5*a1-1))) +
+        (m2*(Math.pow(L,a2-1) - Math.pow(L,-0.5*a2-1))) +
+        (m3*(Math.pow(L,a3-1) - Math.pow(L,-0.5*a3-1)))
+    },
+    arruda: {
+      params: ['mu','lambda_m'],
+      initial: [0.5, 5.0],
+      pathDependent: false,
+      solve: (L, [mu, lm]) => {
+        const I1 = L*L + 2/L;
+        const x2 = I1 / (3*lm*lm);
+        const poly =
+          1 + x2/10 + 11*Math.pow(x2,2)/525 + 19*Math.pow(x2,3)/3500;
+        return mu * (L - 1/(L*L)) * poly;
+      }
+    },
+    exttube: {
+      params: ['Gc','delta','Ge','beta'],
+      initial: [0.5, 0.10, 0.2, 0.7],
+      pathDependent: false,
+      solve: (L, [Gc, delta, Ge, beta]) => extendedTubeNominalStress(L, Gc, delta, Ge, beta)
+    },
+    bb: {
+      params: ['muA','jA_lock','muB','jB_lock','gamma0','C','m'],
+      initial: [0.5, 2.5, 0.5, 2.5, 0.01, -1.0, 4.0],
+      pathDependent: true,
+      predictSeries: (pts, params) => bbPredictSeries(pts, params)
+    }
+  };
+
+  // -------------------------
+  // Prediction
+  // -------------------------
+  function predictStressSeries(modelKey, params){
+    const model = MODELS[modelKey];
+    const mullinsOn = document.getElementById('enableMullins')?.checked;
+
+    if(model.pathDependent){
+      return { stress: model.predictSeries(cleanData, params) };
+    }
+
+    const sig0 = cleanData.map(p => model.solve(1+p.x, params));
+
+    if(mullinsOn){
+      const testW = virginEnergyW0(modelKey, Math.max(1e-12, 1+cleanData[0].x), params);
+      if(testW !== null){
+        const out = applyMullinsToStressSeries(modelKey, cleanData, sig0, params);
+        return { stress: out.stress };
+      }
+    }
+    return { stress: sig0 };
+  }
+
+  // -------------------------
+  // Closed-form LS for neo/mooney2/mooney3
+  // -------------------------
+  function fitLinearHyperelastic(modelKey, pts){
+    const n = pts.length;
+    if(n < 3) return null;
+    if(!(modelKey === 'neo' || modelKey === 'mooney2' || modelKey === 'mooney3')) return null;
+
+    const ridge = 1e-12;
+    const rows = [];
+    const b = [];
+
+    for(const p of pts){
+      const y = p.y;
+      const L = Math.max(1e-12, 1 + p.x);
+      const basis = (L - Math.pow(L, -2));
+      const f1 = 2*basis;
+
+      if(modelKey === 'neo'){
+        rows.push([f1]); b.push(y);
+      } else if(modelKey === 'mooney2'){
+        rows.push([f1, f1/L]); b.push(y);
+      } else if(modelKey === 'mooney3'){
+        const f3 = f1*(L*L + 2/L - 3);
+        rows.push([f1, f1/L, f3]); b.push(y);
+      }
+    }
+
+    const m = rows[0].length;
+    const ATA = Array.from({length:m}, ()=>Array(m).fill(0));
+    const ATb = Array(m).fill(0);
+
+    for(let i=0;i<n;i++){
+      const r = rows[i];
+      for(let a=0;a<m;a++){
+        ATb[a] += r[a]*b[i];
+        for(let c=0;c<m;c++) ATA[a][c] += r[a]*r[c];
+      }
+    }
+    for(let a=0;a<m;a++) ATA[a][a] += ridge;
+
+    const M = ATA.map((row,i)=>row.concat([ATb[i]]));
+    for(let k=0;k<m;k++){
+      let piv = k;
+      for(let i=k+1;i<m;i++) if(Math.abs(M[i][k]) > Math.abs(M[piv][k])) piv = i;
+      [M[k], M[piv]] = [M[piv], M[k]];
+
+      const d = M[k][k] || 1e-30;
+      for(let j=k;j<m+1;j++) M[k][j] /= d;
+
+      for(let i=0;i<m;i++){
+        if(i===k) continue;
+        const f = M[i][k];
+        for(let j=k;j<m+1;j++) M[i][j] -= f*M[k][j];
+      }
+    }
+    const psol = M.map(r=>r[m]);
+    if(modelKey === 'neo') return [psol[0]];
+    if(modelKey === 'mooney2') return [psol[0], psol[1]];
+    if(modelKey === 'mooney3') return [psol[0], psol[1], psol[2]];
+    return null;
+  }
+
+  // -------------------------
+  // Constraints
+  // -------------------------
+  function enforceConstraints(modelKey, params){
+    const model = MODELS[modelKey];
+    const out = [...params];
+
+    if(modelKey==='exttube'){
+      for(let i=0;i<out.length;i++){
+        const name = model.params[i];
+        if(name==='beta') out[i]=clamp(out[i], 1e-6, 1.0);
+        if(name==='delta') out[i]=Math.max(0, out[i]);
+        if(name==='Gc' || name==='Ge') out[i]=Math.max(0, out[i]);
+      }
+    }
+    if(modelKey==='bb'){
+      for(let i=0;i<out.length;i++){
+        const name = model.params[i];
+        if(name.includes('mu')) out[i]=Math.max(0, out[i]);
+        if(name.includes('lock')) out[i]=Math.max(1.01, out[i]);
+        if(name==='gamma0') out[i]=Math.max(0, out[i]);
+        if(name==='m') out[i]=Math.max(0, out[i]);
+      }
+    }
+    if(modelKey==='arruda'){
+      out[1] = Math.max(1.05, out[1]);
+      out[0] = Math.max(0, out[0]);
+    }
+    return out;
+  }
+
+  // -------------------------
+  // Objective (includes T/C weights)
+  // -------------------------
+  function calculateError(modelKey, params){
+    const predObj = predictStressSeries(modelKey, params);
+    const preds = predObj.stress;
+    if(!preds || preds.length !== cleanData.length) return Number.POSITIVE_INFINITY;
+
+    const mode = document.getElementById('errorWeightSelect')?.value || 'mcal';
+    const yAbsMax = Math.max(1e-12, ...cleanData.map(p => Math.abs(p.y)));
+    const eMax = Math.max(1e-12, ...cleanData.map(p => p.x));
+    const floor = 1e-9 * yAbsMax;
+
+    const wT = Math.max(0, parseFloat(document.getElementById('wTension')?.value ?? '1.0'));
+    const wC = Math.max(0, parseFloat(document.getElementById('wCompression')?.value ?? '1.0'));
+
+    let sum = 0, wsum = 0;
+
+    for(let i=0;i<cleanData.length;i++){
+      const e = cleanData[i].x;
+      const y = cleanData[i].y;
+      const p = preds[i];
+      if(!Number.isFinite(p) || !Number.isFinite(y)) return Number.POSITIVE_INFINITY;
+
+      const src = cleanData[i].src || (e >= 0 ? 'T' : 'C');
+      const wSrc = (src === 'C') ? wC : wT;
+
+      let w = 1.0;
+
+      if(mode === 'uniform'){
+        const r = p - y;
+        const ww = 1.0 * wSrc;
+        sum += ww * r*r; wsum += ww;
+      }
+      else if(mode === 'highstrain'){
+        w = 1.0 + 4.0 * (i/Math.max(1, cleanData.length-1));
+        const r = p - y;
+        const ww = w * wSrc;
+        sum += ww * r*r; wsum += ww;
+      }
+      else if(mode === 'normalized'){
+        const denom = Math.max(floor, Math.abs(y));
+        const r = (p - y)/denom;
+        const ww = 1.0 * wSrc;
+        sum += ww * r*r; wsum += ww;
+      }
+      else if(mode === 'log'){
+        const yp = Math.max(floor, Math.abs(y));
+        const pp = Math.max(floor, Math.abs(p));
+        const r = Math.log(pp) - Math.log(yp);
+        const ww = 1.0 * wSrc;
+        sum += ww * r*r; wsum += ww;
+      }
+      else {
+        // MCalibration-style: low strain emphasis
+        w = 0.70 * Math.exp(-3.0 * (e/Math.max(1e-12, eMax))) + 0.30;
+        const r = p - y;
+        const ww = w * wSrc;
+        sum += ww * r*r; wsum += ww;
+      }
+    }
+
+    return sum / Math.max(1e-12, wsum);
+  }
+
+  // -------------------------
+  // ✅ FIX: curve spans minE..maxE (shows compression curve)
+  // -------------------------
+  function buildCurveForParams(modelKey, params){
+    const model = MODELS[modelKey];
+    const mullinsOn = document.getElementById('enableMullins')?.checked;
+
+    const xs = cleanData.map(p => p.x);
+    const minE = Math.min(...xs);
+    const maxE = Math.max(...xs);
+
+    // For Mullins or BB, plot predicted at data points (history/order)
+    if(mullinsOn || model.pathDependent){
       const predObj = predictStressSeries(modelKey, params);
-      const preds = predObj.stress;
-      if(!preds || preds.length !== cleanData.length) return Number.POSITIVE_INFINITY;
-
-      const mode = document.getElementById('errorWeightSelect')?.value || 'mcal';
-      const yAbsMax = Math.max(1e-12, ...cleanData.map(p => Math.abs(p.y)));
-      const eMax = Math.max(1e-12, ...cleanData.map(p => p.x));
-      const floor = 1e-9 * yAbsMax;
-
-      let sum = 0;
-      let wsum = 0;
-
-      for(let i=0;i<cleanData.length;i++){
-        const e = cleanData[i].x;
-        const y = cleanData[i].y;
-        const p = preds[i];
-        if(!Number.isFinite(p) || !Number.isFinite(y)) return Number.POSITIVE_INFINITY;
-
-        let w = 1.0;
-
-        if(mode === 'uniform'){
-          w = 1.0;
-          const r = p - y;
-          sum += w * r*r;
-          wsum += w;
-        }
-        else if(mode === 'highstrain'){
-          w = 1.0 + 4.0 * (i/Math.max(1, cleanData.length-1));
-          const r = p - y;
-          sum += w * r*r;
-          wsum += w;
-        }
-        else if(mode === 'normalized'){
-          const denom = Math.max(floor, Math.abs(y));
-          const r = (p - y)/denom;
-          sum += r*r;
-          wsum += 1.0;
-        }
-        else if(mode === 'log'){
-          const yp = Math.max(floor, Math.abs(y));
-          const pp = Math.max(floor, Math.abs(p));
-          const r = Math.log(pp) - Math.log(yp);
-          sum += r*r;
-          wsum += 1.0;
-        }
-        else {
-          w = 0.70 * Math.exp(-3.0 * (e/Math.max(1e-12, eMax))) + 0.30;
-          const r = p - y;
-          sum += w * r*r;
-          wsum += w;
-        }
-      }
-
-      return sum / Math.max(1e-12, wsum);
+      return cleanData.map((p,i)=>({x:p.x, y:predObj.stress[i]}));
     }
 
-    // -------------------------
-    // Curves for chart
-    // -------------------------
-    function buildCurveForParams(modelKey, params){
-      const model = MODELS[modelKey];
-      const mullinsOn = document.getElementById('enableMullins')?.checked;
-      const maxE = Math.max(...cleanData.map(p=>p.x));
-
-      const predObj = predictStressSeries(modelKey, params);
-      const preds = predObj.stress;
-
-      if(mullinsOn || model.pathDependent){
-        return cleanData.map((p,i)=>({x:p.x, y:preds[i]}));
-      }
-
-      const curve = [];
-      const end = maxE*1.1;
-      const steps = 90;
-      for(let k=0;k<=steps;k++){
-        const e = end * (k/steps);
-        curve.push({x:e, y:model.solve(1+e, params)});
-      }
-      return curve;
+    const curve = [];
+    const steps = 140;
+    for(let k=0;k<=steps;k++){
+      const e = minE + (maxE - minE) * (k/steps);
+      const L = 1 + e;
+      if(L <= 1e-8) continue;
+      const y = model.solve(L, params);
+      if(Number.isFinite(y)) curve.push({x:e, y:y});
     }
+    return curve;
+  }
 
-    function ensureValidationChart(){
-      const ctx = document.getElementById('valChart')?.getContext('2d');
-      if(!ctx) return;
-      if(chart) return;
+  function ensureValidationChart(){
+    const ctx = document.getElementById('valChart')?.getContext('2d');
+    if(!ctx) return;
+    if(chart) return;
 
-      chart = new Chart(ctx, {
-        type:'scatter',
-        data:{ datasets:[
-          {label:'Experiment (cleaned)', data:cleanData, backgroundColor:'#f59e0b', pointRadius:5, showLine:false},
-          {label:'Best-so-far', data:[], borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3},
-          {label:'Current candidate', data:[], borderColor:'#10b981', showLine:true, pointRadius:0, borderWidth:2, borderDash:[6,4]}
-        ]},
-        options:{
-          responsive:true, maintainAspectRatio:false,
-          animation:false,
-          parsing:false,
-          scales:{
-            x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
-            y:{ title:{display:true, text:'Stress (nominal used for fit)'} }
-          }
+    chart = new Chart(ctx, {
+      type:'scatter',
+      data:{ datasets:[
+        {label:'Exp Tension', data:[], backgroundColor:'#f59e0b', pointRadius:5, showLine:false},
+        {label:'Exp Compression', data:[], backgroundColor:'#a855f7', pointRadius:5, showLine:false},
+        {label:'Best-so-far', data:[], borderColor:'#1e3a8a', showLine:true, pointRadius:0, borderWidth:3},
+        {label:'Current candidate', data:[], borderColor:'#10b981', showLine:true, pointRadius:0, borderWidth:2, borderDash:[6,4]}
+      ]},
+      options:{
+        responsive:true, maintainAspectRatio:false,
+        animation:false,
+        parsing:false,
+        scales:{
+          x:{ title:{display:true, text:'Engineering Strain (ε)'}, grid:{display:false}},
+          y:{ title:{display:true, text:'Stress (nominal used for fit)'} }
         }
-      });
+      }
+    });
+  }
+
+  function updateLiveCurves(modelKey, bestParams, currentParams, iterLabel, bestErr, currentErr){
+    const live = document.getElementById('liveUpdate')?.checked;
+    if(!live) return;
+    ensureValidationChart();
+    if(!chart) return;
+
+    const status = document.getElementById('liveStatus');
+    if(status){
+      status.textContent =
+        `${iterLabel} | Best: ${Number.isFinite(bestErr) ? bestErr.toExponential(3) : bestErr} | ` +
+        `Current: ${Number.isFinite(currentErr) ? currentErr.toExponential(3) : currentErr}`;
     }
 
-    function updateLiveCurves(modelKey, bestParams, currentParams, iterLabel, bestErr, currentErr){
-      const live = document.getElementById('liveUpdate')?.checked;
-      if(!live) return;
+    const expT = cleanData.filter(p => (p.src || (p.x>=0?'T':'C')) === 'T');
+    const expC = cleanData.filter(p => (p.src || (p.x>=0?'T':'C')) === 'C');
 
-      ensureValidationChart();
-      if(!chart) return;
+    chart.data.datasets[0].data = expT;
+    chart.data.datasets[1].data = expC;
+    chart.data.datasets[2].data = buildCurveForParams(modelKey, bestParams);
+    chart.data.datasets[3].data = buildCurveForParams(modelKey, currentParams);
+    chart.update('none');
+  }
 
-      const status = document.getElementById('liveStatus');
-      if(status){
-        status.textContent =
-          `${iterLabel} | Best: ${Number.isFinite(bestErr) ? bestErr.toExponential(3) : bestErr} | ` +
-          `Current: ${Number.isFinite(currentErr) ? currentErr.toExponential(3) : currentErr}`;
+  // -------------------------
+  // Optimizers
+  // -------------------------
+  async function optimizePattern(modelKey, startParams){
+    const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+
+    let bestParams = enforceConstraints(modelKey, [...startParams]);
+    let bestErr = calculateError(modelKey, bestParams);
+
+    let currentParams = [...bestParams];
+    let currentErr = bestErr;
+
+    let step = 0.15;
+    const iters = (modelKey === 'bb') ? 600 : 1400;
+
+    for(let iter=0; iter<iters; iter++){
+      if(stopFlag) break;
+
+      let trial = bestParams.map(v => v + (Math.abs(v)+1) * step * randn());
+      trial = enforceConstraints(modelKey, trial);
+
+      const trialErr = calculateError(modelKey, trial);
+
+      currentParams = trial;
+      currentErr = trialErr;
+
+      if(trialErr < bestErr){
+        bestErr = trialErr;
+        bestParams = trial;
+        step *= 1.03;
+      } else {
+        step *= 0.997;
       }
 
-      chart.data.datasets[0].data = cleanData;
-      chart.data.datasets[1].data = buildCurveForParams(modelKey, bestParams);
-      chart.data.datasets[2].data = buildCurveForParams(modelKey, currentParams);
-      chart.update('none');
+      if(iter % liveEvery === 0){
+        updateLiveCurves(modelKey, bestParams, currentParams, `Pattern iter ${iter}`, bestErr, currentErr);
+        await yieldToUI();
+      }
+
+      if(step < 1e-7) break;
     }
 
-    // -------------------------
-    // Optimizers
-    // -------------------------
-    async function optimizePattern(modelKey, startParams){
-      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+    return { params: bestParams, err: bestErr };
+  }
 
-      let bestParams = enforceConstraints(modelKey, [...startParams]);
-      let bestErr = calculateError(modelKey, bestParams);
+  async function optimizeNelderMead(modelKey, startParams, maxIter=260){
+    const n = startParams.length;
+    const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+    const alpha=1, gamma=2, rho=0.5, sigma=0.5;
 
-      let currentParams = [...bestParams];
-      let currentErr = bestErr;
+    const simplex = [];
+    simplex.push(enforceConstraints(modelKey, startParams));
+    for(let i=0;i<n;i++){
+      const p = [...startParams];
+      p[i] += (Math.abs(p[i])+1)*0.1;
+      simplex.push(enforceConstraints(modelKey, p));
+    }
 
-      let step = 0.15;
-      const iters = (modelKey === 'bb') ? 600 : 1400;
+    const f = (p)=>calculateError(modelKey, p);
+    let vals = simplex.map(p => f(p));
 
-      for(let iter=0; iter<iters; iter++){
-        if(stopFlag) break;
+    for(let it=0; it<maxIter; it++){
+      if(stopFlag) break;
 
-        let trial = bestParams.map(v => v + (Math.abs(v)+1) * step * randn());
-        trial = enforceConstraints(modelKey, trial);
+      const idx = [...Array(n+1).keys()].sort((a,b)=>vals[a]-vals[b]);
+      const best = simplex[idx[0]];
+      const worst = simplex[idx[n]];
+      const fbest = vals[idx[0]];
+      const fworst = vals[idx[n]];
+      const f2 = vals[idx[n-1]];
 
-        const trialErr = calculateError(modelKey, trial);
+      const centroid = Array(n).fill(0);
+      for(let k=0;k<n;k++){
+        for(let i=0;i<n;i++) centroid[k] += simplex[idx[i]][k];
+        centroid[k] /= n;
+      }
 
-        currentParams = trial;
-        currentErr = trialErr;
+      let xr = centroid.map((c,k)=> c + alpha*(c - worst[k]));
+      xr = enforceConstraints(modelKey, xr);
+      const fr = f(xr);
 
-        if(trialErr < bestErr){
-          bestErr = trialErr;
-          bestParams = trial;
-          step *= 1.03;
+      if(it % liveEvery === 0){
+        updateLiveCurves(modelKey, best, xr, `NM iter ${it}`, fbest, fr);
+        await yieldToUI();
+      }
+
+      if(fr < fbest){
+        let xe = centroid.map((c,k)=> c + gamma*(xr[k]-c));
+        xe = enforceConstraints(modelKey, xe);
+        const fe = f(xe);
+
+        if(fe < fr){ simplex[idx[n]] = xe; vals[idx[n]] = fe; }
+        else { simplex[idx[n]] = xr; vals[idx[n]] = fr; }
+      } else if(fr < f2){
+        simplex[idx[n]] = xr; vals[idx[n]] = fr;
+      } else {
+        let xc;
+        if(fr < fworst) xc = centroid.map((c,k)=> c + rho*(xr[k]-c));
+        else xc = centroid.map((c,k)=> c - rho*(c - worst[k]));
+        xc = enforceConstraints(modelKey, xc);
+        const fc = f(xc);
+
+        if(fc < fworst){
+          simplex[idx[n]] = xc; vals[idx[n]] = fc;
         } else {
-          step *= 0.997;
+          for(let i=1;i<n+1;i++){
+            const pi = simplex[idx[i]].map((x,k)=> best[k] + sigma*(x - best[k]));
+            simplex[idx[i]] = enforceConstraints(modelKey, pi);
+            vals[idx[i]] = f(simplex[idx[i]]);
+          }
         }
+      }
 
-        if(iter % liveEvery === 0){
-          updateLiveCurves(modelKey, bestParams, currentParams, `Pattern iter ${iter}`, bestErr, currentErr);
+      const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
+      const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length);
+      if(sd < 1e-10) break;
+    }
+
+    let bestI = 0;
+    for(let i=1;i<vals.length;i++) if(vals[i] < vals[bestI]) bestI = i;
+    return { params: simplex[bestI], err: vals[bestI] };
+  }
+
+  async function optimizeDE(modelKey, baseInit, generations=140){
+    const dim = baseInit.length;
+    const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+
+    const NP = Math.max(30, 12*dim);
+    const F = 0.8;
+    const CR = 0.9;
+
+    let pop = Array.from({length:NP}, () => enforceConstraints(modelKey, jitterAround(baseInit, 0.8)));
+    let fit = pop.map(p => calculateError(modelKey, p));
+
+    let bestI = 0;
+    for(let i=1;i<NP;i++) if(fit[i] < fit[bestI]) bestI = i;
+    let bestParams = pop[bestI];
+    let bestErr = fit[bestI];
+
+    for(let g=0; g<generations; g++){
+      if(stopFlag) break;
+
+      for(let i=0;i<NP;i++){
+        if(stopFlag) break;
+
+        let r1,r2,r3;
+        do{ r1 = Math.floor(Math.random()*NP); }while(r1===i);
+        do{ r2 = Math.floor(Math.random()*NP); }while(r2===i || r2===r1);
+        do{ r3 = Math.floor(Math.random()*NP); }while(r3===i || r3===r1 || r3===r2);
+
+        const xi = pop[i], a = pop[r1], b = pop[r2], c = pop[r3];
+        const v = a.map((av,k)=> av + F*(b[k]-c[k]));
+
+        const jRand = Math.floor(Math.random()*dim);
+        let u = xi.map((xk,k)=>(Math.random() < CR || k===jRand) ? v[k] : xk);
+
+        u = enforceConstraints(modelKey, u);
+        const fu = calculateError(modelKey, u);
+
+        if(g % liveEvery === 0 && i === 0){
+          updateLiveCurves(modelKey, bestParams, u, `DE gen ${g}`, bestErr, fu);
           await yieldToUI();
         }
 
-        if(step < 1e-7) break;
+        if(fu < fit[i]){
+          pop[i] = u;
+          fit[i] = fu;
+          if(fu < bestErr){
+            bestErr = fu;
+            bestParams = u;
+          }
+        }
       }
-
-      return { params: bestParams, err: bestErr };
     }
 
-    async function optimizeNelderMead(modelKey, startParams, maxIter=260){
-      const n = startParams.length;
-      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
-      const alpha=1, gamma=2, rho=0.5, sigma=0.5;
+    return { params: bestParams, err: bestErr };
+  }
 
-      const simplex = [];
-      simplex.push(enforceConstraints(modelKey, startParams));
-      for(let i=0;i<n;i++){
-        const p = [...startParams];
-        p[i] += (Math.abs(p[i])+1)*0.1;
-        simplex.push(enforceConstraints(modelKey, p));
-      }
+  async function optimizeGA(modelKey, baseInit, generations=180){
+    const dim = baseInit.length;
+    const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
 
-      const f = (p)=>calculateError(modelKey, p);
-      let vals = simplex.map(p => f(p));
+    const popSize = Math.max(40, 14*dim);
+    const elite = Math.max(2, Math.floor(popSize*0.10));
+    const mutRate = 0.20;
+    const mutSigma = 0.15;
 
-      for(let it=0; it<maxIter; it++){
-        if(stopFlag) break;
+    let pop = Array.from({length:popSize}, ()=> enforceConstraints(modelKey, jitterAround(baseInit, 1.0)));
 
-        const idx = [...Array(n+1).keys()].sort((a,b)=>vals[a]-vals[b]);
-        const best = simplex[idx[0]];
-        const worst = simplex[idx[n]];
-        const fbest = vals[idx[0]];
-        const fworst = vals[idx[n]];
-        const f2 = vals[idx[n-1]];
-
-        const centroid = Array(n).fill(0);
-        for(let k=0;k<n;k++){
-          for(let i=0;i<n;i++) centroid[k] += simplex[idx[i]][k];
-          centroid[k] /= n;
-        }
-
-        let xr = centroid.map((c,k)=> c + alpha*(c - worst[k]));
-        xr = enforceConstraints(modelKey, xr);
-        const fr = f(xr);
-
-        if(it % liveEvery === 0){
-          updateLiveCurves(modelKey, best, xr, `NM iter ${it}`, fbest, fr);
-          await yieldToUI();
-        }
-
-        if(fr < fbest){
-          let xe = centroid.map((c,k)=> c + gamma*(xr[k]-c));
-          xe = enforceConstraints(modelKey, xe);
-          const fe = f(xe);
-
-          if(fe < fr){ simplex[idx[n]] = xe; vals[idx[n]] = fe; }
-          else { simplex[idx[n]] = xr; vals[idx[n]] = fr; }
-        } else if(fr < f2){
-          simplex[idx[n]] = xr; vals[idx[n]] = fr;
-        } else {
-          let xc;
-          if(fr < fworst) xc = centroid.map((c,k)=> c + rho*(xr[k]-c));
-          else xc = centroid.map((c,k)=> c - rho*(c - worst[k]));
-          xc = enforceConstraints(modelKey, xc);
-          const fc = f(xc);
-
-          if(fc < fworst){
-            simplex[idx[n]] = xc; vals[idx[n]] = fc;
-          } else {
-            for(let i=1;i<n+1;i++){
-              const pi = simplex[idx[i]].map((x,k)=> best[k] + sigma*(x - best[k]));
-              simplex[idx[i]] = enforceConstraints(modelKey, pi);
-              vals[idx[i]] = f(simplex[idx[i]]);
-            }
-          }
-        }
-
-        const mean = vals.reduce((a,b)=>a+b,0)/vals.length;
-        const sd = Math.sqrt(vals.reduce((a,b)=>a+(b-mean)**2,0)/vals.length);
-        if(sd < 1e-10) break;
-      }
-
-      let bestI = 0;
-      for(let i=1;i<vals.length;i++) if(vals[i] < vals[bestI]) bestI = i;
-      return { params: simplex[bestI], err: vals[bestI] };
+    function fitness(p){
+      const e = calculateError(modelKey, p);
+      if(!Number.isFinite(e)) return 0;
+      return 1.0/(1e-12 + e);
     }
 
-    async function optimizeDE(modelKey, baseInit, generations=140){
-      const dim = baseInit.length;
-      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
+    let bestParams = pop[0];
+    let bestErr = calculateError(modelKey, bestParams);
 
-      const NP = Math.max(30, 12*dim);
-      const F = 0.8;
-      const CR = 0.9;
+    for(let g=0; g<generations; g++){
+      if(stopFlag) break;
 
-      let pop = Array.from({length:NP}, () => enforceConstraints(modelKey, jitterAround(baseInit, 0.8)));
-      let fit = pop.map(p => calculateError(modelKey, p));
+      const scored = pop.map(p => ({p, f: fitness(p), e: calculateError(modelKey, p)}))
+                        .sort((a,b)=> b.f - a.f);
 
-      let bestI = 0;
-      for(let i=1;i<NP;i++) if(fit[i] < fit[bestI]) bestI = i;
-      let bestParams = pop[bestI];
-      let bestErr = fit[bestI];
-
-      for(let g=0; g<generations; g++){
-        if(stopFlag) break;
-
-        for(let i=0;i<NP;i++){
-          if(stopFlag) break;
-
-          let r1,r2,r3;
-          do{ r1 = Math.floor(Math.random()*NP); }while(r1===i);
-          do{ r2 = Math.floor(Math.random()*NP); }while(r2===i || r2===r1);
-          do{ r3 = Math.floor(Math.random()*NP); }while(r3===i || r3===r1 || r3===r2);
-
-          const xi = pop[i], a = pop[r1], b = pop[r2], c = pop[r3];
-          const v = a.map((av,k)=> av + F*(b[k]-c[k]));
-
-          const jRand = Math.floor(Math.random()*dim);
-          let u = xi.map((xk,k)=>(Math.random() < CR || k===jRand) ? v[k] : xk);
-
-          u = enforceConstraints(modelKey, u);
-          const fu = calculateError(modelKey, u);
-
-          if(g % liveEvery === 0 && i === 0){
-            updateLiveCurves(modelKey, bestParams, u, `DE gen ${g}`, bestErr, fu);
-            await yieldToUI();
-          }
-
-          if(fu < fit[i]){
-            pop[i] = u;
-            fit[i] = fu;
-            if(fu < bestErr){
-              bestErr = fu;
-              bestParams = u;
-            }
-          }
-        }
+      if(scored[0].e < bestErr){
+        bestErr = scored[0].e;
+        bestParams = scored[0].p;
       }
 
-      return { params: bestParams, err: bestErr };
-    }
+      const next = [];
+      for(let i=0;i<elite;i++) next.push(scored[i].p);
 
-    async function optimizeGA(modelKey, baseInit, generations=180){
-      const dim = baseInit.length;
-      const liveEvery = Math.max(1, parseInt(document.getElementById('liveEvery')?.value || "10", 10));
-
-      const popSize = Math.max(40, 14*dim);
-      const elite = Math.max(2, Math.floor(popSize*0.10));
-      const mutRate = 0.20;
-      const mutSigma = 0.15;
-
-      let pop = Array.from({length:popSize}, ()=> enforceConstraints(modelKey, jitterAround(baseInit, 1.0)));
-
-      function fitness(p){
-        const e = calculateError(modelKey, p);
-        if(!Number.isFinite(e)) return 0;
-        return 1.0/(1e-12 + e);
+      const sumF = scored.reduce((a,b)=>a+b.f,0) || 1;
+      function pick(){
+        let r = Math.random()*sumF;
+        for(const s of scored){ r -= s.f; if(r <= 0) return s.p; }
+        return scored[0].p;
       }
 
-      let bestParams = pop[0];
-      let bestErr = calculateError(modelKey, bestParams);
-
-      for(let g=0; g<generations; g++){
+      while(next.length < popSize){
         if(stopFlag) break;
 
-        const scored = pop.map(p => ({p, f: fitness(p), e: calculateError(modelKey, p)}))
-                          .sort((a,b)=> b.f - a.f);
+        const p1 = pick();
+        const p2 = pick();
+        const t = Math.random();
+        let child = p1.map((x,k)=> t*x + (1-t)*p2[k]);
 
-        if(scored[0].e < bestErr){
-          bestErr = scored[0].e;
-          bestParams = scored[0].p;
+        if(Math.random() < mutRate){
+          child = child.map((x)=> x + (Math.abs(x)+1)*mutSigma*randn());
         }
 
-        const next = [];
-        for(let i=0;i<elite;i++) next.push(scored[i].p);
+        child = enforceConstraints(modelKey, child);
+        next.push(child);
 
-        const sumF = scored.reduce((a,b)=>a+b.f,0) || 1;
-        function pick(){
-          let r = Math.random()*sumF;
-          for(const s of scored){ r -= s.f; if(r <= 0) return s.p; }
-          return scored[0].p;
-        }
-
-        let currentChild = bestParams;
-        let currentErr = bestErr;
-
-        while(next.length < popSize){
-          if(stopFlag) break;
-
-          const p1 = pick();
-          const p2 = pick();
-          const t = Math.random();
-          let child = p1.map((x,k)=> t*x + (1-t)*p2[k]);
-
-          if(Math.random() < mutRate){
-            child = child.map((x)=> x + (Math.abs(x)+1)*mutSigma*randn());
-          }
-
-          child = enforceConstraints(modelKey, child);
-          next.push(child);
-
-          currentChild = child;
-          currentErr = calculateError(modelKey, child);
-
-          if(g % liveEvery === 0 && next.length === elite + 1){
-            updateLiveCurves(modelKey, bestParams, currentChild, `GA gen ${g}`, bestErr, currentErr);
-            await yieldToUI();
-          }
-        }
-
-        pop = next;
-
-        if(g % liveEvery === 0){
-          updateLiveCurves(modelKey, bestParams, bestParams, `GA gen ${g}`, bestErr, bestErr);
+        if(g % liveEvery === 0 && next.length === elite + 1){
+          updateLiveCurves(modelKey, bestParams, child, `GA gen ${g}`, bestErr, calculateError(modelKey, child));
           await yieldToUI();
         }
       }
 
-      return { params: bestParams, err: bestErr };
+      pop = next;
+
+      if(g % liveEvery === 0){
+        updateLiveCurves(modelKey, bestParams, bestParams, `GA gen ${g}`, bestErr, bestErr);
+        await yieldToUI();
+      }
     }
 
-    // -------------------------
-    // Render results
-    // -------------------------
-    function renderResults(key, params, err){
-      const model = MODELS[key];
-      const container = document.getElementById('paramsContainer');
-      const card = document.getElementById('resultsCard');
-      const snippet = document.getElementById('abaqusSnippet');
+    return { params: bestParams, err: bestErr };
+  }
 
-      card.classList.remove('hidden');
+  // -------------------------
+  // R² diagnostics
+  // -------------------------
+  function computeR2(pts, preds){
+    if(!pts || pts.length < 2) return NaN;
+    const ys = pts.map(p=>p.y);
+    const mean = ys.reduce((a,b)=>a+b,0)/ys.length;
+    let sst = 0, sse = 0;
+    for(let i=0;i<pts.length;i++){
+      const y = pts[i].y, p = preds[i];
+      sst += (y-mean)*(y-mean);
+      sse += (y-p)*(y-p);
+    }
+    if(sst <= 1e-20) return NaN;
+    return 1 - (sse/sst);
+  }
 
-      container.innerHTML = params.map((p,i)=>
-        `<div class="flex justify-between border-b border-slate-50 pb-1">
-           <span class="text-slate-400">${model.params[i]}</span>
-           <span class="font-bold text-blue-700">${Number.isFinite(p) ? p.toFixed(6) : String(p)}</span>
-         </div>`
-      ).join('');
+  // -------------------------
+  // Render results
+  // -------------------------
+  function renderResults(modelKey, params, err){
+    const model = MODELS[modelKey];
+    const container = document.getElementById('paramsContainer');
+    const card = document.getElementById('resultsCard');
+    const snippet = document.getElementById('abaqusSnippet');
 
-      const meanY = cleanData.reduce((a,b)=>a+b.y,0)/cleanData.length;
-      const ssTot = cleanData.reduce((a,b)=>a+Math.pow(b.y-meanY,2),0);
-      const r2 = (ssTot > 0 && Number.isFinite(err)) ? (1 - (err/ssTot)) : 0;
-      document.getElementById('r2Val').innerText = r2.toFixed(5);
+    card.classList.remove('hidden');
 
-      if(key === 'bb'){
-        snippet.innerHTML =
-          `<pre># Bergstrom-Boyce (uniaxial, rate-dependent)
+    container.innerHTML = params.map((p,i)=>`
+      <div class="flex justify-between border-b border-slate-50 pb-1">
+        <span class="text-slate-400">${model.params[i]}</span>
+        <span class="font-bold text-blue-700">${Number.isFinite(p) ? p.toFixed(6) : String(p)}</span>
+      </div>
+    `).join('');
+
+    const predsAll = predictStressSeries(modelKey, params).stress;
+
+    const ptsT = [], predT = [];
+    const ptsC = [], predC = [];
+    for(let i=0;i<cleanData.length;i++){
+      const src = cleanData[i].src || (cleanData[i].x>=0?'T':'C');
+      if(src==='C'){ ptsC.push(cleanData[i]); predC.push(predsAll[i]); }
+      else { ptsT.push(cleanData[i]); predT.push(predsAll[i]); }
+    }
+
+    const r2All = computeR2(cleanData, predsAll);
+    const r2T = computeR2(ptsT, predT);
+    const r2C = computeR2(ptsC, predC);
+
+    document.getElementById('r2All').innerText = Number.isFinite(r2All) ? r2All.toFixed(5) : "N/A";
+    document.getElementById('r2T').innerText   = Number.isFinite(r2T) ? r2T.toFixed(5) : "N/A";
+    document.getElementById('r2C').innerText   = Number.isFinite(r2C) ? r2C.toFixed(5) : "N/A";
+
+    if(modelKey === 'bb'){
+      snippet.innerHTML =
+        `<pre># Bergstrom-Boyce (uniaxial, rate-dependent)
 ${model.params.map((n,i)=>`${n}=${params[i].toFixed(6)}`).join(', ')}
 bbRate=${parseFloat(document.getElementById('bbRate').value)}, bbSubsteps=${parseInt(document.getElementById('bbSubsteps').value,10)}
 </pre>`;
-      } else {
-        snippet.innerHTML =
-          `<pre># Hyperelastic (${key}) parameters
+    } else {
+      snippet.innerHTML =
+        `<pre># Hyperelastic (${modelKey}) parameters
 ${model.params.map((n,i)=>`${n}=${params[i].toFixed(6)}`).join(', ')}
 </pre>`;
-      }
-
-      updateLiveCurves(key, params, params, "Final", err, err);
     }
 
-    // -------------------------
-    // Main controller
-    // -------------------------
-    async function runOptimization(){
-      stopFlag = false;
-      document.getElementById('stopBtn').classList.remove('hidden');
+    updateLiveCurves(modelKey, params, params, "Final", err, err);
+  }
 
-      tableToTextarea();
+  // -------------------------
+  // Main controller
+  // -------------------------
+  async function runOptimization(){
+    stopFlag = false;
+    document.getElementById('stopBtn').classList.remove('hidden');
 
-      cleanData = getOptimizationData();
-      if(cleanData.length < 3){
-        document.getElementById('stopBtn').classList.add('hidden');
-        return;
-      }
+    // Input tab is source of truth
+    syncIncludeUI('input');
+    tablesToTextareas();
 
-      ensureValidationChart();
-      document.getElementById('statusIndicator').classList.remove('hidden');
-      document.getElementById('liveStatus').textContent = "Starting...";
-
-      const modelKey = document.getElementById('modelSelect').value;
-      const model = MODELS[modelKey];
-
-      const closed = fitLinearHyperelastic(modelKey, cleanData);
-      if(closed){
-        const err = calculateError(modelKey, closed);
-        renderResults(modelKey, closed, err);
-        document.getElementById('statusIndicator').classList.add('hidden');
-        document.getElementById('stopBtn').classList.add('hidden');
-        return;
-      }
-
-      let init = enforceConstraints(modelKey, [...model.initial]);
-      let initErr = calculateError(modelKey, init);
-      updateLiveCurves(modelKey, init, init, "Init", initErr, initErr);
-      await yieldToUI();
-
-      const opt = document.getElementById('optimizerSelect')?.value || 'pattern';
-      let result = null;
-
-      if(opt === 'pattern'){
-        result = await optimizePattern(modelKey, init);
-      } else if(opt === 'nelder'){
-        result = await optimizeNelderMead(modelKey, init, 320);
-      } else if(opt === 'de'){
-        result = await optimizeDE(modelKey, init, 140);
-      } else if(opt === 'ga'){
-        result = await optimizeGA(modelKey, init, 180);
-      } else if(opt === 'hybrid_de_nelder'){
-        const r1 = await optimizeDE(modelKey, init, 120);
-        if(!stopFlag){
-          const r2 = await optimizeNelderMead(modelKey, r1.params, 240);
-          result = r2;
-        } else {
-          result = r1;
-        }
-      } else {
-        result = await optimizePattern(modelKey, init);
-      }
-
-      if(result){
-        renderResults(modelKey, result.params, result.err);
-      }
-
+    cleanData = getOptimizationData();
+    if(cleanData.length < 3){
       document.getElementById('statusIndicator').classList.add('hidden');
       document.getElementById('stopBtn').classList.add('hidden');
-      document.getElementById('liveStatus').textContent = stopFlag ? "Stopped." : "Done.";
+      document.getElementById('liveStatus').textContent = "Need >= 3 enabled points.";
+      return;
     }
 
-    // -------------------------
-    // Init
-    // -------------------------
-    document.addEventListener('DOMContentLoaded', () => {
-      loadSample('rubber');
-    });
-  </script>
+    ensureValidationChart();
+    document.getElementById('statusIndicator').classList.remove('hidden');
+    document.getElementById('liveStatus').textContent = "Starting...";
+
+    const modelKey = document.getElementById('modelSelect').value;
+    const model = MODELS[modelKey];
+
+    const closed = fitLinearHyperelastic(modelKey, cleanData);
+    if(closed){
+      const err0 = calculateError(modelKey, closed);
+      renderResults(modelKey, closed, err0);
+      document.getElementById('statusIndicator').classList.add('hidden');
+      document.getElementById('stopBtn').classList.add('hidden');
+      document.getElementById('liveStatus').textContent = "Done (closed-form).";
+      return;
+    }
+
+    let init = enforceConstraints(modelKey, [...model.initial]);
+    let initErr = calculateError(modelKey, init);
+    updateLiveCurves(modelKey, init, init, "Init", initErr, initErr);
+    await yieldToUI();
+
+    const opt = document.getElementById('optimizerSelect')?.value || 'pattern';
+    let result = null;
+
+    if(opt === 'pattern') result = await optimizePattern(modelKey, init);
+    else if(opt === 'nelder') result = await optimizeNelderMead(modelKey, init, 320);
+    else if(opt === 'de') result = await optimizeDE(modelKey, init, 140);
+    else if(opt === 'ga') result = await optimizeGA(modelKey, init, 180);
+    else if(opt === 'hybrid_de_nelder'){
+      const r1 = await optimizeDE(modelKey, init, 120);
+      if(!stopFlag){
+        const r2 = await optimizeNelderMead(modelKey, r1.params, 240);
+        result = r2;
+      } else result = r1;
+    } else result = await optimizePattern(modelKey, init);
+
+    if(result){
+      renderResults(modelKey, result.params, result.err);
+    }
+
+    document.getElementById('statusIndicator').classList.add('hidden');
+    document.getElementById('stopBtn').classList.add('hidden');
+    document.getElementById('liveStatus').textContent = stopFlag ? "Stopped." : "Done.";
+  }
+
+  // -------------------------
+  // Init (Option B: load sample on startup)
+  // -------------------------
+  document.addEventListener('DOMContentLoaded', () => {
+    loadSample('rubber_both'); // sample shows on load
+    // sampleLoaded and userImportedOnce set by loadSample()
+
+    // Sync toggles both ways
+    document.getElementById('includeTension_in').addEventListener('change', ()=>{ syncIncludeUI('input'); });
+    document.getElementById('includeCompression_in').addEventListener('change', ()=>{ syncIncludeUI('input'); });
+
+    document.getElementById('includeTension').addEventListener('change', ()=>{ syncIncludeUI('fit'); });
+    document.getElementById('includeCompression').addEventListener('change', ()=>{ syncIncludeUI('fit'); });
+  });
+</script>
+
 </body>
 </html>
